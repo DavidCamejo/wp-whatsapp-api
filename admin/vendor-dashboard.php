@@ -162,7 +162,7 @@ class WPWA_Vendor_Dashboard {
     public function load_styles() {
         wp_enqueue_style('wpwa-vendor-css', WPWA_ASSETS_URL . 'css/vendor-dashboard.css', array(), WPWA_VERSION);
     }
-}
+
     /**
      * Render vendor dashboard
      */
@@ -257,6 +257,7 @@ class WPWA_Vendor_Dashboard {
                     </div>
             </div>
         </div>
+        <?php
     }
 
     /**
