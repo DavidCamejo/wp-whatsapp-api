@@ -1,0 +1,278 @@
+/**
+ * WhatsApp API Vendor Dashboard Styles
+ */
+
+.wpwa-vendor-dashboard {
+    margin: 20px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+}
+
+.wpwa-enable-toggle {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.wpwa-enable-toggle label {
+    font-size: 1.1em;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.wpwa-enable-toggle input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.wpwa-description {
+    margin-top: 8px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.wpwa-cards-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+@media (min-width: 768px) {
+    .wpwa-cards-container {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.wpwa-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.wpwa-card h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    color: #23282d;
+}
+
+.wpwa-session-info {
+    margin-bottom: 20px;
+}
+
+.wpwa-session-status {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.wpwa-status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+    margin-right: 10px;
+}
+
+.wpwa-status-authenticated {
+    background: #e7f5ea;
+    color: #2e7d32;
+}
+
+.wpwa-status-disconnected {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.wpwa-status-initializing,
+.wpwa-status-qr_ready {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.wpwa-status-failed {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.wpwa-status-none {
+    background: #f5f5f5;
+    color: #757575;
+}
+
+.wpwa-session-name {
+    font-weight: 600;
+    font-size: 1.1em;
+}
+
+.wpwa-session-created {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.wpwa-session-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.wpwa-create-session {
+    margin-bottom: 20px;
+}
+
+.wpwa-form-group {
+    margin-bottom: 15px;
+}
+
+.wpwa-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.wpwa-form-group input,
+.wpwa-form-group textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.wpwa-qr-container {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.wpwa-qr-container img {
+    max-width: 250px;
+    height: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    background: #fff;
+    margin-bottom: 10px;
+}
+
+.wpwa-status-message {
+    color: #1565c0;
+    font-weight: 500;
+}
+
+.wpwa-success-message {
+    color: #2e7d32;
+    font-weight: 500;
+}
+
+.wpwa-error-message {
+    color: #c62828;
+    font-weight: 500;
+}
+
+.wpwa-test-message {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.wpwa-test-message h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+#wpwa_test_result {
+    margin-top: 15px;
+}
+
+.wpwa-orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.wpwa-orders-table th,
+.wpwa-orders-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.wpwa-orders-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+}
+
+.wpwa-orders-table tr:hover td {
+    background: #f9f9f9;
+}
+
+.wpwa-loading {
+    color: #666;
+    font-style: italic;
+}
+
+.order-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.status-completed {
+    background: #e7f5ea;
+    color: #2e7d32;
+}
+
+.status-processing {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.status-on-hold {
+    background: #fff8e1;
+    color: #f57c00;
+}
+
+.status-pending {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.status-cancelled,
+.status-failed,
+.status-refunded {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.wpwa-view-all-link {
+    display: inline-block;
+    margin-top: 15px;
+    font-size: 0.9em;
+}
+
+/* Plugin-specific adjustments */
+
+/* WCFM */
+#wcfm-content .wpwa-vendor-dashboard {
+    padding: 20px;
+    background: #fff;
+}
+
+/* Dokan */
+.dokan-dashboard .wpwa-vendor-dashboard {
+    background: #fff;
+    padding: 20px;
+}
+
+/* WC Vendors */
+.wcv-dashboard-navigation ~ .wpwa-vendor-dashboard {
+    background: #fff;
+    padding: 20px;
+    margin-top: 20px;
+}

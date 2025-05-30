@@ -1,0 +1,423 @@
+/**
+ * WhatsApp API Admin Styles
+ */
+
+/* General Styles */
+.wpwa-admin-wrap {
+    margin: 20px 20px 0 0;
+    max-width: 1200px;
+}
+
+.wpwa-admin-header {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 3px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.wpwa-admin-header h1 {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 600;
+}
+
+.wpwa-logo {
+    max-height: 50px;
+    margin-right: 15px;
+}
+
+.wpwa-version {
+    font-size: 12px;
+    color: #777;
+    font-weight: normal;
+    margin-left: 8px;
+}
+
+/* Tabs Navigation */
+.wpwa-tabs-nav {
+    display: flex;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+
+.wpwa-tabs-nav a {
+    padding: 12px 15px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+    color: #555;
+    border-bottom: 3px solid transparent;
+}
+
+.wpwa-tabs-nav a:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.wpwa-tabs-nav a.active {
+    border-bottom-color: #25D366;
+    color: #000;
+}
+
+.wpwa-tabs-nav a:hover {
+    color: #25D366;
+}
+
+.wpwa-tab-content {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    border-radius: 3px;
+}
+
+/* Form Styling */
+.wpwa-form-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.wpwa-form-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+.wpwa-form-section h2 {
+    margin-top: 0;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.wpwa-form-row {
+    margin-bottom: 15px;
+}
+
+.wpwa-form-row label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.wpwa-form-row input[type="text"],
+.wpwa-form-row input[type="password"],
+.wpwa-form-row input[type="url"],
+.wpwa-form-row select,
+.wpwa-form-row textarea {
+    width: 100%;
+    max-width: 400px;
+}
+
+.wpwa-form-row .description {
+    font-size: 12px;
+    color: #777;
+    margin-top: 5px;
+}
+
+/* API Key Styles */
+.wpwa-api-key-container {
+    display: flex;
+    max-width: 600px;
+}
+
+.wpwa-api-key-container input {
+    flex: 1;
+    border-radius: 3px 0 0 3px;
+    border-right: 0;
+}
+
+.wpwa-api-key-container button {
+    border-radius: 0 3px 3px 0 !important;
+}
+
+/* Status Indicators */
+.wpwa-status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.wpwa-status-active {
+    background-color: #25D366;
+}
+
+.wpwa-status-inactive {
+    background-color: #ccc;
+}
+
+.wpwa-status-warning {
+    background-color: #ffba00;
+}
+
+.wpwa-status-error {
+    background-color: #d63638;
+}
+
+/* Log Styles */
+.wpwa-logs-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.wpwa-logs-container table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.wpwa-logs-container th,
+.wpwa-logs-container td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+}
+
+.wpwa-logs-container th {
+    background-color: #f8f8f8;
+    font-weight: 500;
+}
+
+.log-level-error {
+    background-color: rgba(214, 54, 56, 0.1);
+}
+
+.log-level-warning {
+    background-color: rgba(255, 186, 0, 0.1);
+}
+
+/* Dashboard Styles */
+.wpwa-dashboard-cards {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -10px;
+}
+
+.wpwa-dashboard-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 3px;
+    padding: 20px;
+    margin: 0 10px 20px;
+    width: calc(50% - 20px);
+    min-width: 300px;
+    box-sizing: border-box;
+}
+
+.wpwa-dashboard-card h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    font-size: 16px;
+}
+
+/* WhatsApp Specific Styling */
+.wpwa-button {
+    background-color: #25D366 !important;
+    border-color: #22c15e !important;
+    color: #fff !important;
+}
+
+.wpwa-button:hover,
+.wpwa-button:focus {
+    background-color: #22c15e !important;
+    border-color: #1fb055 !important;
+}
+
+/* Templates Styling */
+#wpwa-templates-container {
+    margin-bottom: 20px;
+}
+
+.wpwa-template {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    border-radius: 3px;
+}
+
+.wpwa-template-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: #f0f0f0;
+    border-bottom: 1px solid #ddd;
+}
+
+.wpwa-template-name {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.wpwa-template-content {
+    padding: 15px;
+}
+
+.wpwa-template-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.wpwa-template-variables {
+    margin-top: 20px;
+    background: #f9f9f9;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.wpwa-template-variables h4 {
+    margin-top: 0;
+}
+
+.wpwa-template-variables ul {
+    margin-bottom: 0;
+}
+
+/* Auto Messages */
+.wpwa-auto-message {
+    margin-bottom: 10px;
+}
+
+.wpwa-auto-message select {
+    margin-top: 5px;
+    min-width: 300px;
+}
+
+/* Vendor Dashboard */
+.wpwa-vendor-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.wpwa-session-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 3px;
+    padding: 20px;
+    width: 100%;
+    max-width: 600px;
+}
+
+.wpwa-session-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.wpwa-session-status {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+}
+
+.wpwa-qr-container {
+    text-align: center;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 3px;
+}
+
+.wpwa-qr-container img {
+    max-width: 250px;
+    height: auto;
+}
+
+.wpwa-orders-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 3px;
+    padding: 20px;
+    width: 100%;
+}
+
+.wpwa-orders-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.wpwa-orders-table th,
+.wpwa-orders-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.wpwa-orders-table th {
+    background-color: #f8f8f8;
+    font-weight: 500;
+}
+
+.wpwa-send-test {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.order-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-completed {
+    background: rgba(37, 211, 102, 0.1);
+    color: #25D366;
+}
+
+.status-processing {
+    background: rgba(47, 132, 237, 0.1);
+    color: #2f84ed;
+}
+
+.status-pending {
+    background: rgba(255, 186, 0, 0.1);
+    color: #ffba00;
+}
+
+.status-cancelled,
+.status-failed {
+    background: rgba(214, 54, 56, 0.1);
+    color: #d63638;
+}
+
+.wpwa-view-all-link {
+    display: block;
+    margin-top: 10px;
+    text-align: right;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .wpwa-dashboard-card {
+        width: 100%;
+        margin: 0 0 20px;
+    }
+    
+    .wpwa-tabs-nav {
+        flex-wrap: wrap;
+    }
+    
+    .wpwa-tabs-nav a {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+}
