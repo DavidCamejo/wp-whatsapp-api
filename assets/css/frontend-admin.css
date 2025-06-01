@@ -1,0 +1,476 @@
+/**
+ * Frontend Admin Panel Styles
+ * 
+ * Responsive styles for the WhatsApp API frontend admin panel
+ */
+
+/* Main container */
+.wpwa-frontend-admin-panel {
+    max-width: 1200px;
+    margin: 2rem auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    color: #333;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+}
+
+/* Header and footer */
+.wpwa-frontend-admin-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.wpwa-frontend-admin-header h2 {
+    font-size: 1.8rem;
+    margin: 0;
+    color: #2271b1;
+}
+
+.wpwa-version-info {
+    font-size: 0.8rem;
+    color: #777;
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.wpwa-version, .wpwa-install-date {
+    display: inline-block;
+}
+
+.wpwa-frontend-admin-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #777;
+}
+
+/* Tabs */
+.wpwa-tabs .ui-tabs-nav {
+    margin: 0 0 1.5rem;
+    padding: 0;
+    border-bottom: 1px solid #ccc;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    background: none;
+    border-radius: 0;
+}
+
+.wpwa-tabs .ui-tabs-nav li {
+    margin: 0 0 -1px 0;
+    background: #f0f0f1;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    list-style: none;
+}
+
+.wpwa-tabs .ui-tabs-nav li a {
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    font-weight: 500;
+    color: #444;
+    display: block;
+    outline: none;
+    box-shadow: none;
+}
+
+.wpwa-tabs .ui-tabs-nav .ui-state-active {
+    background: #fff;
+    border-bottom: 1px solid #fff;
+}
+
+.wpwa-tabs .ui-tabs-nav .ui-state-active a {
+    color: #2271b1;
+}
+
+.wpwa-tabs .ui-tabs-panel {
+    padding: 1rem 0;
+    background: #fff;
+}
+
+/* Tab content */
+.wpwa-tab-content {
+    padding: 1rem 0.5rem;
+}
+
+.wpwa-tab-content h3 {
+    font-size: 1.3rem;
+    margin: 0 0 1rem;
+    color: #1d2327;
+}
+
+.wpwa-tab-description {
+    margin-bottom: 1.5rem;
+    color: #646970;
+}
+
+/* Forms */
+.wpwa-frontend-form {
+    margin-bottom: 2rem;
+}
+
+.wpwa-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.wpwa-form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.wpwa-form-group input[type="text"],
+.wpwa-form-group input[type="url"],
+.wpwa-form-group input[type="number"] {
+    width: 100%;
+    max-width: 500px;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.wpwa-form-group .wpwa-field-desc {
+    color: #646970;
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+}
+
+/* Checkbox fields */
+.wpwa-checkbox-group {
+    display: flex;
+    align-items: center;
+}
+
+.wpwa-checkbox-group input[type="checkbox"] {
+    margin-right: 0.5rem;
+}
+
+.wpwa-checkbox-group label {
+    margin-bottom: 0;
+    font-weight: normal;
+}
+
+.wpwa-checkbox-group .wpwa-field-desc {
+    margin-left: 1.8rem;
+    display: block;
+}
+
+/* Input groups */
+.wpwa-input-group {
+    display: flex;
+    max-width: 500px;
+}
+
+.wpwa-input-group input {
+    flex: 1;
+    border-right: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.wpwa-input-group button {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* Input with suffix */
+.wpwa-input-with-suffix {
+    display: flex;
+    align-items: center;
+    max-width: 500px;
+}
+
+.wpwa-input-with-suffix input {
+    flex: 1;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.wpwa-input-suffix {
+    padding: 0.5rem 0.75rem;
+    background: #f0f0f1;
+    border: 1px solid #ccc;
+    border-left: none;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    color: #646970;
+}
+
+/* Settings sections */
+.wpwa-settings-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.wpwa-settings-section:last-child {
+    border-bottom: none;
+}
+
+/* Buttons */
+.wpwa-button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    background: #f6f7f7;
+    color: #2c3338;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.wpwa-button:hover {
+    background: #f0f0f1;
+}
+
+.wpwa-button-primary {
+    background: #2271b1;
+    border-color: #2271b1;
+    color: white;
+}
+
+.wpwa-button-primary:hover {
+    background: #135e96;
+    border-color: #135e96;
+}
+
+.wpwa-button-secondary {
+    background: #f6f7f7;
+    border-color: #2271b1;
+    color: #2271b1;
+}
+
+.wpwa-button-secondary:hover {
+    background: #f0f0f1;
+    border-color: #135e96;
+    color: #135e96;
+}
+
+.wpwa-button-danger {
+    background: #f6f7f7;
+    border-color: #d63638;
+    color: #d63638;
+}
+
+.wpwa-button-danger:hover {
+    background: #f0f0f1;
+    border-color: #b32d2e;
+    color: #b32d2e;
+}
+
+/* Form actions */
+.wpwa-form-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Messages */
+.wpwa-messages {
+    margin-top: 1rem;
+}
+
+/* Notes */
+.wpwa-note {
+    padding: 1rem;
+    border-left: 4px solid #ccc;
+    background: #f6f7f7;
+    margin: 1.5rem 0;
+}
+
+.wpwa-note.wpwa-warning {
+    border-color: #f0b849;
+    background: #fef8ee;
+}
+
+.wpwa-note.wpwa-error {
+    border-color: #d63638;
+    background: #fef0f0;
+}
+
+/* Logs container */
+.wpwa-logs-container {
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 1rem;
+}
+
+.wpwa-logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.wpwa-logs-table th,
+.wpwa-logs-table td {
+    padding: 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.wpwa-logs-table th {
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.wpwa-logs-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Log entry severity colors */
+.wpwa-log-info td:nth-child(2) {
+    color: #2271b1;
+}
+
+.wpwa-log-warning td:nth-child(2) {
+    color: #f0b849;
+}
+
+.wpwa-log-error td:nth-child(2) {
+    color: #d63638;
+}
+
+/* Logs actions */
+.wpwa-logs-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    justify-content: flex-end;
+}
+
+/* Loading indicator */
+.wpwa-loading {
+    text-align: center;
+    padding: 2rem;
+    color: #646970;
+}
+
+/* Error messages */
+.wpwa-frontend-error, 
+.wpwa-error {
+    background: #fef0f0;
+    border-left: 4px solid #d63638;
+    padding: 1rem;
+    color: #b32d2e;
+    margin-bottom: 1rem;
+}
+
+/* Notification */
+.wpwa-notification {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    padding: 1rem;
+    border-radius: 4px;
+    color: white;
+    font-weight: 500;
+    z-index: 9999;
+    max-width: 300px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    animation: fadeInRight 0.3s ease-in-out;
+}
+
+.wpwa-notification-success {
+    background: #00a32a;
+}
+
+.wpwa-notification-error {
+    background: #d63638;
+}
+
+.wpwa-notification-info {
+    background: #2271b1;
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .wpwa-frontend-admin-panel {
+        padding: 1rem;
+        margin: 1rem auto;
+    }
+
+    .wpwa-tabs .ui-tabs-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .wpwa-tabs .ui-tabs-nav li {
+        margin: 0 0 0.25rem;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+    }
+
+    .wpwa-tabs .ui-tabs-nav .ui-state-active {
+        border-bottom: 1px solid #ccc;
+    }
+
+    .wpwa-form-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .wpwa-form-actions button {
+        width: 100%;
+    }
+
+    .wpwa-input-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .wpwa-input-group input {
+        border-right: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%;
+    }
+
+    .wpwa-input-group button {
+        border-radius: 4px;
+        width: 100%;
+    }
+
+    .wpwa-input-with-suffix {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .wpwa-input-with-suffix input {
+        border-right: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%;
+    }
+
+    .wpwa-input-suffix {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%;
+        text-align: center;
+    }
+}

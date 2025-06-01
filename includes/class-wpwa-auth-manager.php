@@ -35,14 +35,33 @@ class WPWA_Auth_Manager {
      * Constructor
      */
     public function __construct() {
-        $this->jwt_secret = get_option('wpwa_jwt_secret');
+        // Get JWT secret from constant if defined, otherwise from option
+        $this->jwt_secret = defined('WPWA_JWT_SECRET_KEY') ? WPWA_JWT_SECRET_KEY : get_option('wpwa_jwt_secret');
         $this->api_base_url = get_option('wpwa_api_url');
         
         // Include JWT library if not already available
-        if (!class_exists('JWT')) {
-            require_once WPWA_PLUGIN_DIR . 'vendor/firebase/php-jwt/src/JWT.php';
-            require_once WPWA_PLUGIN_DIR . 'vendor/firebase/php-jwt/src/Key.php';
+        if (!class_exists('\\Firebase\\JWT\\JWT')) {
+            require_once WPWA_PATH . 'vendor/firebase/php-jwt/src/JWT.php';
+            require_once WPWA_PATH . 'vendor/firebase/php-jwt/src/Key.php';
         }
+    }
+    
+    /**
+     * Generate a new secure JWT secret key
+     * 
+     * @return string The generated secret key
+     */
+    public function generate_jwt_secret() {
+        // Generate a secure random string for JWT secret (64 chars for better security)
+        $new_secret = wp_generate_password(64, true, true);
+        
+        // Store in options table
+        update_option('wpwa_jwt_secret', $new_secret);
+        
+        // Update the instance variable
+        $this->jwt_secret = $new_secret;
+        
+        return $new_secret;
     }
     
     /**

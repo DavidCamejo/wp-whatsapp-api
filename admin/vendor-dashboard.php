@@ -37,12 +37,12 @@ class WPWA_Vendor_Dashboard {
         add_action('init', array($this, 'wcv_dashboard_endpoint'));
         
         // Ajax handlers
-        add_action('wp_ajax_wpwa_vendor_create_session', array($this, 'ajax_create_session'));
-        add_action('wp_ajax_wpwa_vendor_check_session', array($this, 'ajax_check_session'));
-        add_action('wp_ajax_wpwa_vendor_disconnect_session', array($this, 'ajax_disconnect_session'));
-        add_action('wp_ajax_wpwa_vendor_send_test_message', array($this, 'ajax_send_test_message'));
-        add_action('wp_ajax_wpwa_vendor_get_recent_orders', array($this, 'ajax_get_recent_orders'));
-        add_action('wp_ajax_wpwa_vendor_toggle_whatsapp', array($this, 'ajax_toggle_whatsapp'));
+        add_action('wp_ajax_wpwa_create_session', array($this, 'ajax_create_session'));
+        add_action('wp_ajax_wpwa_check_session', array($this, 'ajax_check_session'));
+        add_action('wp_ajax_wpwa_disconnect_session', array($this, 'ajax_disconnect_session'));
+        add_action('wp_ajax_wpwa_send_test_message', array($this, 'ajax_send_test_message'));
+        add_action('wp_ajax_wpwa_get_recent_orders', array($this, 'ajax_get_recent_orders'));
+        add_action('wp_ajax_wpwa_toggle_whatsapp', array($this, 'ajax_toggle_whatsapp'));
     }
 
     /**
@@ -132,15 +132,41 @@ class WPWA_Vendor_Dashboard {
     }
 
     /**
-     * Load scripts
+     * Get available message templates
+     * 
+     * @return array Message templates data
+     */
+    private function get_message_templates() {
+        $template_manager = new WPWA_Template_Manager();
+        $templates = $template_manager->get_templates_for_vendor(get_current_user_id());
+        $formatted_templates = array();
+        
+        if (!empty($templates) && is_array($templates)) {
+            foreach ($templates as $template) {
+                if (isset($template->id)) {
+                    $formatted_templates[$template->id] = array(
+                        'id' => $template->id,
+                        'name' => $template->name,
+                        'content' => $template->content
+                    );
+                }
+            }
+        }
+        
+        return $formatted_templates;
+    }
+
+    /**
+     * Load scripts for the vendor dashboard
      */
     public function load_scripts() {
         wp_enqueue_script('wpwa-vendor-js', WPWA_ASSETS_URL . 'js/vendor-dashboard.js', array('jquery'), WPWA_VERSION, true);
         
         // Add localized variables for JavaScript
-        wp_localize_script('wpwa-vendor-js', 'wpwa_vendor', array(
+        wp_localize_script('wpwa-vendor-js', 'wpwa', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('wpwa_vendor_nonce'),
+            'nonce' => wp_create_nonce('wpwa_nonce'),
+            'templates' => $this->get_message_templates(),
             'i18n' => array(
                 'confirm_disconnect' => __('Are you sure you want to disconnect your WhatsApp session?', 'wp-whatsapp-api'),
                 'connecting' => __('Connecting...', 'wp-whatsapp-api'),
@@ -162,7 +188,6 @@ class WPWA_Vendor_Dashboard {
     public function load_styles() {
         wp_enqueue_style('wpwa-vendor-css', WPWA_ASSETS_URL . 'css/vendor-dashboard.css', array(), WPWA_VERSION);
     }
-}
     /**
      * Render vendor dashboard
      */
@@ -194,6 +219,8 @@ class WPWA_Vendor_Dashboard {
             
             <div class="wpwa-enable-toggle">
                 <label for="wpwa_enable_whatsapp">
+                    <input type="checkbox" id="wpwa_enable_whatsapp" <?php checked($whatsapp_enabled); ?> />
+                    <?php _e('Enable WhatsApp integration', 'wp-whatsapp-api'); ?>
                 </label>
             </div>
             
@@ -203,18 +230,28 @@ class WPWA_Vendor_Dashboard {
                         <!-- Connected Session -->
                         <div class="wpwa-session-info">
                             <div class="wpwa-session-status">
+                                <?php if ($has_session): ?>
+                                <h3><?php echo esc_html($session_name); ?></h3>
+                                <span class="<?php echo $status_class; ?>"><?php echo esc_html($status_label); ?></span>
+                                <?php else: ?>
+                                <p><?php _e('No active WhatsApp session', 'wp-whatsapp-api'); ?></p>
+                                <?php endif; ?>
                             </div>
                             
                                 <div class="wpwa-session-created">
-                                        date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($session_created))); ?>
+                                    <?php echo date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($session_created)); ?>
                                 </div>
                             
                             <div class="wpwa-session-actions">
+                                <?php if ($has_session): ?>
                                 <button type="button" id="wpwa_check_session" class="button">
+                                    <?php _e('Check Status', 'wp-whatsapp-api'); ?>
                                 </button>
                                 
                                 <button type="button" id="wpwa_disconnect_session" class="button">
+                                    <?php _e('Disconnect', 'wp-whatsapp-api'); ?>
                                 </button>
+                                <?php endif; ?>
                             </div>
                         </div>
                         
@@ -223,12 +260,16 @@ class WPWA_Vendor_Dashboard {
                             
                             <div class="wpwa-form-group">
                                 <input type="text" id="wpwa_test_phone" placeholder="e.g. +1234567890" />
+                                <label><?php _e('Phone Number', 'wp-whatsapp-api'); ?></label>
                             </div>
                             
                             <div class="wpwa-form-group">
+                                <textarea id="wpwa_test_message" rows="3" placeholder="<?php _e('Enter your test message here...', 'wp-whatsapp-api'); ?>"></textarea>
+                                <label><?php _e('Message', 'wp-whatsapp-api'); ?></label>
                             </div>
                             
                             <button type="button" id="wpwa_send_test" class="button button-primary">
+                                <?php _e('Send Test Message', 'wp-whatsapp-api'); ?>
                             </button>
                             
                             <div id="wpwa_test_result"></div>
@@ -238,9 +279,12 @@ class WPWA_Vendor_Dashboard {
                         <div class="wpwa-create-session">
                             
                             <div class="wpwa-form-group">
+                                <input type="text" id="wpwa_session_name" placeholder="<?php _e('Enter session name', 'wp-whatsapp-api'); ?>" />
+                                <label><?php _e('Session Name', 'wp-whatsapp-api'); ?></label>
                             </div>
                             
                             <button type="button" id="wpwa_create_session" class="button button-primary">
+                                <?php _e('Connect WhatsApp Account', 'wp-whatsapp-api'); ?>
                             </button>
                             
                             <div class="wpwa-qr-container" id="wpwa_qr_container" style="display: none;">
@@ -257,13 +301,14 @@ class WPWA_Vendor_Dashboard {
                     </div>
             </div>
         </div>
+        <?php
     }
 
     /**
      * Ajax handler for creating a new session
      */
     public function ajax_create_session() {
-        check_ajax_referer('wpwa_vendor_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         $user_id = get_current_user_id();
         $session_name = sanitize_text_field($_POST['session_name']);
@@ -311,7 +356,7 @@ class WPWA_Vendor_Dashboard {
      * Ajax handler for checking session status
      */
     public function ajax_check_session() {
-        check_ajax_referer('wpwa_vendor_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         $user_id = get_current_user_id();
         $client_id = get_user_meta($user_id, 'wpwa_session_client_id', true);
@@ -350,7 +395,7 @@ class WPWA_Vendor_Dashboard {
      * Ajax handler for disconnecting a session
      */
     public function ajax_disconnect_session() {
-        check_ajax_referer('wpwa_vendor_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         $user_id = get_current_user_id();
         $client_id = get_user_meta($user_id, 'wpwa_session_client_id', true);
@@ -382,7 +427,7 @@ class WPWA_Vendor_Dashboard {
      * Ajax handler for sending a test message
      */
     public function ajax_send_test_message() {
-        check_ajax_referer('wpwa_vendor_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         $user_id = get_current_user_id();
         $client_id = get_user_meta($user_id, 'wpwa_session_client_id', true);
@@ -429,7 +474,7 @@ class WPWA_Vendor_Dashboard {
      * Ajax handler for getting recent orders
      */
     public function ajax_get_recent_orders() {
-        check_ajax_referer('wpwa_vendor_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         $user_id = get_current_user_id();
         $vendor_id = $this->get_vendor_id($user_id);
@@ -491,7 +536,7 @@ class WPWA_Vendor_Dashboard {
      * Ajax handler for toggling WhatsApp integration
      */
     public function ajax_toggle_whatsapp() {
-        check_ajax_referer('wpwa_vendor_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         $user_id = get_current_user_id();
         $enabled = isset($_POST['enabled']) ? (bool) $_POST['enabled'] : false;
@@ -575,3 +620,4 @@ class WPWA_Vendor_Dashboard {
         return isset($status_labels[$status]) ? $status_labels[$status] : __('Unknown', 'wp-whatsapp-api');
     }
 }
+?>

@@ -27,6 +27,12 @@ class WPWA_Cart_Manager {
         global $wpdb;
         $this->table_name = $wpdb->prefix . 'wpwa_carts';
         
+        // Add support for WooCommerce HPOS
+        if (class_exists('Automattic\\WooCommerce\\Utilities\\FeaturesUtil')) {
+            // Declare compatibility with HPOS
+            \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', __FILE__, true);
+        }
+        
         // Only hook table creation during normal operation, not during plugin activation
         if (!defined('WP_INSTALLING') || !WP_INSTALLING) {
             // Use plugins_loaded instead of init to ensure dependencies are loaded first

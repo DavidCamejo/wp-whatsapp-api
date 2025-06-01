@@ -26,11 +26,11 @@ jQuery(document).ready(function($) {
         const isEnabled = $(this).prop('checked');
         
         $.ajax({
-            url: wpwa_vendor.ajax_url,
+            url: wpwa.ajax_url,
             type: 'POST',
             data: {
-                action: 'wpwa_vendor_toggle_whatsapp',
-                nonce: wpwa_vendor.nonce,
+                action: 'wpwa_toggle_whatsapp',
+                nonce: wpwa.nonce,
                 enabled: isEnabled ? 1 : 0
             },
             success: function(response) {
@@ -68,11 +68,11 @@ jQuery(document).ready(function($) {
         
         // Create session
         $.ajax({
-            url: wpwa_vendor.ajax_url,
+            url: wpwa.ajax_url,
             type: 'POST',
             data: {
-                action: 'wpwa_vendor_create_session',
-                nonce: wpwa_vendor.nonce,
+                action: 'wpwa_create_session',
+                nonce: wpwa.nonce,
                 session_name: sessionName
             },
             success: function(response) {
@@ -112,11 +112,11 @@ jQuery(document).ready(function($) {
         $(this).prop('disabled', true).text('Disconnecting...');
         
         $.ajax({
-            url: wpwa_vendor.ajax_url,
+            url: wpwa.ajax_url,
             type: 'POST',
             data: {
-                action: 'wpwa_vendor_disconnect_session',
-                nonce: wpwa_vendor.nonce
+                action: 'wpwa_disconnect_session',
+                nonce: wpwa.nonce
             },
             success: function(response) {
                 if (response.success) {
@@ -148,11 +148,11 @@ jQuery(document).ready(function($) {
     // Check session status
     function checkSessionStatus() {
         $.ajax({
-            url: wpwa_vendor.ajax_url,
+            url: wpwa.ajax_url,
             type: 'POST',
             data: {
-                action: 'wpwa_vendor_check_session',
-                nonce: wpwa_vendor.nonce
+                action: 'wpwa_check_session',
+                nonce: wpwa.nonce
             },
             success: function(response) {
                 if (response.success) {
@@ -200,11 +200,11 @@ jQuery(document).ready(function($) {
         ordersContainer.html('<p>Loading recent orders...</p>');
         
         $.ajax({
-            url: wpwa_vendor.ajax_url,
+            url: wpwa.ajax_url,
             type: 'POST',
             data: {
-                action: 'wpwa_vendor_get_recent_orders',
-                nonce: wpwa_vendor.nonce
+                action: 'wpwa_get_recent_orders',
+                nonce: wpwa.nonce
             },
             success: function(response) {
                 if (response.success) {
@@ -239,11 +239,11 @@ jQuery(document).ready(function($) {
         $(this).prop('disabled', true).text('Sending...');
         
         $.ajax({
-            url: wpwa_vendor.ajax_url,
+            url: wpwa.ajax_url,
             type: 'POST',
             data: {
-                action: 'wpwa_vendor_send_test_message',
-                nonce: wpwa_vendor.nonce,
+                action: 'wpwa_send_test_message',
+                nonce: wpwa.nonce,
                 phone: phone,
                 message: message
             },
@@ -269,7 +269,7 @@ jQuery(document).ready(function($) {
         const templateId = $(this).val();
         
         if (templateId) {
-            const templates = wpwa_vendor.templates || {};
+            const templates = wpwa.templates || {};
             if (templates[templateId]) {
                 $('#wpwa-test-message').val(templates[templateId].content);
             }

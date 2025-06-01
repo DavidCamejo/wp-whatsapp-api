@@ -1,0 +1,16 @@
+{
+    "name": "wordpress/wp-whatsapp-api",
+    "description": "Unofficial WhatsApp API integration for WooCommerce multivendor marketplaces",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=7.2",
+        "firebase/php-jwt": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "WPWA\\": "includes/"
+        }
+    },
+    "minimum-stability": "stable"
+}

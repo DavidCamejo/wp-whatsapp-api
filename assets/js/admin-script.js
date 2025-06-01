@@ -3,6 +3,40 @@
  */
 
 jQuery(document).ready(function($) {
+    // Generate new JWT Secret
+    $('#wpwa_generate_jwt_secret').on('click', function(e) {
+        e.preventDefault();
+        
+        if (!confirm(wpwa.i18n.confirm_generate_jwt)) {
+            return;
+        }
+        
+        $(this).prop('disabled', true).text('Generating...');
+        
+        $.ajax({
+            url: wpwa.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'wpwa_generate_jwt_secret',
+                nonce: wpwa.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#wpwa_jwt_secret').val(response.data.jwt_secret);
+                    alert('New JWT Secret generated successfully!');
+                } else {
+                    alert('Failed to generate JWT Secret: ' + response.data.message);
+                }
+            },
+            error: function() {
+                alert('Request failed. Please try again.');
+            },
+            complete: function() {
+                $('#wpwa_generate_jwt_secret').prop('disabled', false).text('Generate New Secret');
+            }
+        });
+    });
+    
     // API URL and Key Validation
     $('#wpwa-validate-api').on('click', function(e) {
         e.preventDefault();

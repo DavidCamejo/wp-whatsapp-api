@@ -109,13 +109,13 @@ class WPWA_Logger {
     }
     
     /**
-     * Internal method to log a message
+     * Log a message
      *
      * @param string $level   Log level
      * @param string $message Log message
      * @param array  $context Additional context data
      */
-    private function log($level, $message, $context = array()) {
+    public function log($level, $message, $context = array()) {
         // Format timestamp
         $timestamp = date('Y-m-d H:i:s');
         

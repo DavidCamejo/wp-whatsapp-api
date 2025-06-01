@@ -34,25 +34,25 @@ class WPWA_Admin_Settings {
             __('WhatsApp API', 'wp-whatsapp-api'),
             __('WhatsApp API', 'wp-whatsapp-api'),
             'manage_options',
-            'wpwa-settings',
+            'wp-whatsapp-api',  // Changed from wpwa-settings to wp-whatsapp-api to match the main plugin
             array($this, 'render_settings_page'),
-            'dashicons-whatsapp',
+            'dashicons-format-chat',  // Use the same dashicon as in the main plugin file
             58
         );
 
         // Settings submenu
         add_submenu_page(
-            'wpwa-settings',
+            'wp-whatsapp-api',  // Changed parent slug to match main menu
             __('Settings', 'wp-whatsapp-api'),
             __('Settings', 'wp-whatsapp-api'),
             'manage_options',
-            'wpwa-settings',
+            'wp-whatsapp-api',  // Changed slug to match parent
             array($this, 'render_settings_page')
         );
 
         // Session manager submenu
         add_submenu_page(
-            'wpwa-settings',
+            'wp-whatsapp-api',
             __('Session Manager', 'wp-whatsapp-api'),
             __('Session Manager', 'wp-whatsapp-api'),
             'manage_options',
@@ -62,7 +62,7 @@ class WPWA_Admin_Settings {
         
         // Logs submenu
         add_submenu_page(
-            'wpwa-settings',
+            'wp-whatsapp-api',
             __('Logs', 'wp-whatsapp-api'),
             __('Logs', 'wp-whatsapp-api'),
             'manage_options',
@@ -614,17 +614,17 @@ class WPWA_Admin_Settings {
      */
     public function enqueue_admin_scripts($hook) {
         // Only load on our admin pages
-        if (strpos($hook, 'wpwa-') === false) {
+        if (strpos($hook, 'wpwa-') === false && strpos($hook, 'wp-whatsapp-api') === false) {
             return;
         }
         
-        wp_enqueue_style('wpwa-admin-css', WPWA_ASSETS_URL . 'css/admin.css', array(), WPWA_VERSION);
-        wp_enqueue_script('wpwa-admin-js', WPWA_ASSETS_URL . 'js/admin.js', array('jquery'), WPWA_VERSION, true);
+        wp_enqueue_style('wpwa-admin-css', WPWA_ASSETS_URL . 'css/admin-style.css', array(), WPWA_VERSION);
+        wp_enqueue_script('wpwa-admin-js', WPWA_ASSETS_URL . 'js/admin-script.js', array('jquery'), WPWA_VERSION, true);
         
         // Add localized variables for JavaScript
-        wp_localize_script('wpwa-admin-js', 'wpwa_admin', array(
+        wp_localize_script('wpwa-admin-js', 'wpwa', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('wpwa_admin_nonce'),
+            'nonce' => wp_create_nonce('wpwa_nonce'),
             'i18n' => array(
                 'confirm_disconnect' => __('Are you sure you want to disconnect this WhatsApp session? This cannot be undone.', 'wp-whatsapp-api'),
                 'confirm_clear_logs' => __('Are you sure you want to clear all logs? This cannot be undone.', 'wp-whatsapp-api'),

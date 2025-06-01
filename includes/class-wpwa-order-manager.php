@@ -31,6 +31,12 @@ class WPWA_Order_Manager {
     public function __construct($logger) {
         $this->logger = $logger;
         
+        // Add support for WooCommerce HPOS
+        if (class_exists('Automattic\\WooCommerce\\Utilities\\FeaturesUtil')) {
+            // Declare compatibility with HPOS
+            \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', __FILE__, true);
+        }
+        
         // Register hooks for order management
         add_action('woocommerce_order_status_changed', array($this, 'handle_order_status_change'), 10, 4);
         add_action('woocommerce_new_order', array($this, 'handle_new_order'), 10, 2);
