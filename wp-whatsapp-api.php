@@ -3,7 +3,7 @@
  * Plugin Name: WhatsApp API for WooCommerce
  * Plugin URI: https://example.com/wp-whatsapp-api
  * Description: Connect your WooCommerce store to WhatsApp API for automated messaging and customer interactions
- * Version: 1.1.17
+ * Version: 1.1.19
  * Author: WhatsApp API Team
  * Author URI: https://example.com
  * Text Domain: wp-whatsapp-api
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('WPWA_VERSION', '1.1.17'); // Updated with fixes for frontend admin panel functionality
+define('WPWA_VERSION', '1.1.19'); // Updated with role-based JWT token generation and message manager
 define('WPWA_FILE', __FILE__);
 define('WPWA_PATH', plugin_dir_path(__FILE__));
 define('WPWA_URL', plugin_dir_url(__FILE__));
@@ -77,6 +77,12 @@ class WP_WhatsApp_API {
      * @var WPWA_Template_Manager
      */
     public $template_manager;
+
+    /**
+     * Message manager instance
+     * @var WPWA_Message_Manager
+     */
+    public $message_manager;
 
     /**
      * Order processor instance
@@ -174,7 +180,8 @@ class WP_WhatsApp_API {
         $this->product_sync_manager = new WPWA_Product_Sync_Manager($this->api_client, $this->logger);
         $this->cart_manager = new WPWA_Cart_Manager($this->logger);
         $this->customer_manager = new WPWA_Customer_Manager($this->logger);
-        $this->template_manager = new WPWA_Template_Manager($this->api_client, $this->logger);
+        $this->template_manager = new WPWA_Template_Manager();
+        $this->message_manager = new WPWA_Message_Manager($this->api_client, $this->template_manager, $this->logger);
         $this->order_processor = new WPWA_Order_Processor($this->logger);
         $this->order_manager = new WPWA_Order_Manager($this->customer_manager, $this->api_client, $this->logger);
         $this->usage_tracker = new WPWA_Usage_Tracker($this->logger);
@@ -210,6 +217,7 @@ class WP_WhatsApp_API {
         require_once WPWA_PATH . 'includes/class-wpwa-cart-manager.php';
         require_once WPWA_PATH . 'includes/class-wpwa-customer-manager.php';
         require_once WPWA_PATH . 'includes/class-wpwa-template-manager.php';
+        require_once WPWA_PATH . 'includes/class-wpwa-message-manager.php';
         require_once WPWA_PATH . 'includes/class-wpwa-order-processor.php';
         require_once WPWA_PATH . 'includes/class-wpwa-order-manager.php';
         require_once WPWA_PATH . 'includes/class-wpwa-usage-tracker.php';

@@ -97,7 +97,18 @@ class WPWA_API_Client {
         $token = $this->auth_manager->get_api_token();
         
         if (!$token) {
-            return new WP_Error('auth_error', __('Failed to generate authentication token', 'wp-whatsapp-api'));
+            $current_user = wp_get_current_user();
+            $roles_string = !empty($current_user->roles) ? implode(', ', $current_user->roles) : 'none';
+            
+            if (!$this->auth_manager->has_allowed_role($current_user->roles)) {
+                return new WP_Error('unauthorized_role', sprintf(
+                    __('Unauthorized role(s): %s. Only the following roles are allowed: %s', 'wp-whatsapp-api'),
+                    $roles_string,
+                    implode(', ', $this->auth_manager->get_allowed_roles())
+                ));
+            } else {
+                return new WP_Error('auth_error', __('Failed to generate authentication token', 'wp-whatsapp-api'));
+            }
         }
         
         // Build full endpoint URL
@@ -264,7 +275,18 @@ class WPWA_API_Client {
         $token = $this->auth_manager->get_api_token();
         
         if (!$token) {
-            return new WP_Error('auth_error', __('Failed to generate authentication token', 'wp-whatsapp-api'));
+            $current_user = wp_get_current_user();
+            $roles_string = !empty($current_user->roles) ? implode(', ', $current_user->roles) : 'none';
+            
+            if (!$this->auth_manager->has_allowed_role($current_user->roles)) {
+                return new WP_Error('unauthorized_role', sprintf(
+                    __('Unauthorized role(s): %s. Only the following roles are allowed: %s', 'wp-whatsapp-api'),
+                    $roles_string,
+                    implode(', ', $this->auth_manager->get_allowed_roles())
+                ));
+            } else {
+                return new WP_Error('auth_error', __('Failed to generate authentication token', 'wp-whatsapp-api'));
+            }
         }
         
         // Build full endpoint URL

@@ -465,17 +465,15 @@ class WPWA_Template_Manager {
         $template = $global_templates[$template_id];
         $message = $this->parse_template($template['content'], array('order' => $order));
         
-        // Send message via API
+        // Send message via Message Manager
         global $wp_whatsapp_api;
         
-        if (!$wp_whatsapp_api || !isset($wp_whatsapp_api->api_client)) {
+        if (!$wp_whatsapp_api || !isset($wp_whatsapp_api->message_manager)) {
             return;
         }
         
-        $wp_whatsapp_api->api_client->post('/sessions/' . $session_id . '/messages/send', array(
-            'recipient' => $phone,
-            'message' => $message
-        ));
+        // Use the dedicated Message Manager to send the message
+        $wp_whatsapp_api->message_manager->send_text_message($phone, $message, $session_id);
     }
     
     /**

@@ -2,6 +2,21 @@
 
 All notable changes to the WhatsApp API for WooCommerce plugin will be documented in this file.
 
+## [1.1.19] - 2025-06-02
+
+### Fixed
+- Added missing class-wpwa-message-manager.php causing fatal errors
+- Created WPWA_Message_Manager implementation with support for all message types
+- Enhanced message error handling and logging capabilities
+
+## [1.1.18] - 2025-06-01
+
+### Added
+- Enhanced security with role-based JWT token generation
+- Added configurable list of allowed roles for API access via 'wpwa_allowed_roles' filter
+- Improved error messages for unauthorized API access attempts
+- Added detailed logging for unauthorized token requests
+
 ## [1.1.17] - 2025-05-31
 
 ### Fixed
@@ -11,6 +26,10 @@ All notable changes to the WhatsApp API for WooCommerce plugin will be documente
 - Fixed Clear Logs button functionality in frontend admin panel
 - Made logger globally accessible to ensure proper functionality across the system
 - Improved log display format compatibility in the frontend JavaScript
+
+### Added
+- New Message Manager class for centralized handling of WhatsApp messaging operations
+- Support for sending various message types: text, media, interactive buttons, lists, templates, and catalogs
 
 ## [1.1.16] - 2025-05-31
 

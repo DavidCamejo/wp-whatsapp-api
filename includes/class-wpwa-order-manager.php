@@ -488,11 +488,16 @@ class WPWA_Order_Manager {
             }
         }
         
-        // Send message via API
-        $response = $wp_whatsapp_api->api_client->post('/sessions/' . $client_id . '/messages/send', array(
-            'recipient' => $formatted_phone,
-            'message'   => $message
-        ));
+        // Send message via Message Manager
+        if (isset($wp_whatsapp_api->message_manager)) {
+            $response = $wp_whatsapp_api->message_manager->send_text_message($formatted_phone, $message, $client_id);
+        } else {
+            // Fallback to direct API call if Message Manager is not available
+            $response = $wp_whatsapp_api->api_client->post('/sessions/' . $client_id . '/messages/send', array(
+                'recipient' => $formatted_phone,
+                'message'   => $message
+            ));
+        }
         
         if (is_wp_error($response)) {
             $this->logger->error('Failed to send order status notification', array(
@@ -544,11 +549,16 @@ class WPWA_Order_Manager {
             $refund_reason ?: __('Not specified', 'wp-whatsapp-api')
         );
         
-        // Send message via API
-        $response = $wp_whatsapp_api->api_client->post('/sessions/' . $client_id . '/messages/send', array(
-            'recipient' => $formatted_phone,
-            'message'   => $message
-        ));
+        // Send message via Message Manager
+        if (isset($wp_whatsapp_api->message_manager)) {
+            $response = $wp_whatsapp_api->message_manager->send_text_message($formatted_phone, $message, $client_id);
+        } else {
+            // Fallback to direct API call if Message Manager is not available
+            $response = $wp_whatsapp_api->api_client->post('/sessions/' . $client_id . '/messages/send', array(
+                'recipient' => $formatted_phone,
+                'message'   => $message
+            ));
+        }
         
         if (is_wp_error($response)) {
             $this->logger->error('Failed to send refund notification', array(

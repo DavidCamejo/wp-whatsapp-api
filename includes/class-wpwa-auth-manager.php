@@ -65,6 +65,34 @@ class WPWA_Auth_Manager {
     }
     
     /**
+     * Defines the allowed roles that can generate API tokens
+     *
+     * @return array List of allowed roles
+     */
+    public function get_allowed_roles() {
+        // Define allowed roles with a filter to allow customization
+        return apply_filters('wpwa_allowed_roles', [
+            'administrator',
+            'vendor',
+            'shop_manager',
+            'vendor_admin',
+            'vendor_staff',
+            'wcfm_vendor'
+        ]);
+    }
+    
+    /**
+     * Checks if a user has any of the allowed roles
+     *
+     * @param array $user_roles Current user roles
+     * @return boolean True if user has any allowed role
+     */
+    public function has_allowed_role($user_roles) {
+        $allowed_roles = $this->get_allowed_roles();
+        return !empty(array_intersect($allowed_roles, $user_roles));
+    }
+    
+    /**
      * Generates a token JWT for authenticating with the WhatsApp API
      *
      * @return string|boolean JWT token or false on failure
@@ -73,6 +101,17 @@ class WPWA_Auth_Manager {
         $current_user = wp_get_current_user();
         
         if (!$current_user || $current_user->ID === 0) {
+            return false;
+        }
+        
+        // Check if user has any of the allowed roles
+        if (!$this->has_allowed_role($current_user->roles)) {
+            // Log the unauthorized attempt
+            error_log(sprintf('Unauthorized JWT token request: User %s (%d) with roles %s', 
+                $current_user->user_login, 
+                $current_user->ID, 
+                implode(', ', $current_user->roles)
+            ));
             return false;
         }
         
