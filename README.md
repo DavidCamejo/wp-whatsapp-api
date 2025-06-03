@@ -2,7 +2,7 @@
 
 ## Description
 
-This plugin integrates WhatsApp API functionality with WordPress and WooCommerce for a multivendor marketplace setup. It allows vendors to connect their WhatsApp accounts, manage product catalogs, and process orders through WhatsApp.
+This plugin (v1.2.1) integrates WhatsApp API functionality with WordPress and WooCommerce for a multivendor marketplace setup. It allows vendors to connect their WhatsApp accounts, manage product catalogs, and process orders through WhatsApp.
 
 ## Features
 

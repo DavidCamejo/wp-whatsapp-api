@@ -2,6 +2,13 @@
 
 All notable changes to the WhatsApp API for WooCommerce plugin will be documented in this file.
 
+## [1.2.1] - 2025-06-03
+
+### Fixed
+- Fixed fatal error caused by missing autoloader file
+- Removed dependency on non-existent class-wpwa-autoloader.php file
+- Improved plugin initialization process to use direct class includes
+
 ## [1.2.0] - 2025-06-03
 
 ### Added
