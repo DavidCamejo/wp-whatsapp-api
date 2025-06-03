@@ -2,6 +2,21 @@
 
 All notable changes to the WhatsApp API for WooCommerce plugin will be documented in this file.
 
+## [1.2.3] - 2025-06-03
+
+### Fixed
+- Fixed fatal error caused by missing WooCommerce integration file
+- Added robust error handling for missing WooCommerce integration file
+- Created proper WooCommerce integration class implementation
+- Added graceful fallback with admin notice when WooCommerce integration file is missing
+
+## [1.2.2] - 2025-06-03
+
+### Fixed
+- Fixed fatal error caused by incorrect parameters in WPWA_Message_Manager constructor
+- Added missing template manager parameter when initializing message manager
+- Corrected initialization order to ensure template manager is available before message manager
+
 ## [1.2.1] - 2025-06-03
 
 ### Fixed
