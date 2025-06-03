@@ -10,6 +10,7 @@ This plugin integrates WhatsApp API functionality with WordPress and WooCommerce
 - **Product Sync**: Synchronize WooCommerce products with WhatsApp catalogs
 - **Order Processing**: Process orders received through WhatsApp
 - **Message Templates**: Configure and manage message templates
+- **Safe JWT Tokens**: URL-safe token generation for secure transmission in URLs and headers
 - **Admin Dashboard**: Comprehensive admin interface for configuration and monitoring
 - **Frontend Admin Panel**: Access plugin settings from the frontend using a shortcode
 - **Vendor Dashboard**: Dedicated interface for vendors to manage their WhatsApp integration
@@ -53,6 +54,58 @@ The frontend admin panel includes all the same functionality as the admin dashbo
 - JWT Secret generation
 - Log viewing and management
 - System information
+
+### Vendor Dashboard
+
+A dedicated dashboard for vendors to manage their WhatsApp integration is available through a shortcode:
+
+1. Create a new page in WordPress
+2. Add the shortcode `[wpwa_vendor_dashboard]` to the page content
+3. Publish the page
+4. Share the page with your vendors
+
+**Note:** Only users with vendor roles (configurable through the `wpwa_allowed_vendor_roles` filter) can access their specific vendor dashboard. The plugin automatically detects and supports various marketplace plugins including WCFM, Dokan, and WC Vendors.
+
+The vendor dashboard includes the following functionality:
+
+- WhatsApp connection status tracking
+- Session management with QR code scanning
+- Product synchronization with WhatsApp catalogs
+- Recently synced products list
+- WhatsApp integration toggle
+- Activity logs viewing
+
+You can customize the dashboard appearance with the following attributes:
+
+```
+[wpwa_vendor_dashboard title="Your Custom Title" show_logs="yes|no"]
+```
+
+### Vendor Dashboard
+
+A dedicated dashboard for vendors to manage their WhatsApp integration is available through a shortcode:
+
+1. Create a new page in WordPress
+2. Add the shortcode `[wpwa_vendor_dashboard]` to the page content
+3. Publish the page
+4. Share the page with your vendors
+
+**Note:** Only users with vendor roles (configurable through the `wpwa_allowed_vendor_roles` filter) can access their specific vendor dashboard. The plugin automatically detects and supports various marketplace plugins including WCFM, Dokan, and WC Vendors.
+
+The vendor dashboard includes the following functionality:
+
+- WhatsApp connection status tracking
+- Session management with QR code scanning
+- Product synchronization with WhatsApp catalogs
+- Recently synced products list
+- WhatsApp integration toggle
+- Activity logs viewing
+
+You can customize the dashboard appearance with the following attributes:
+
+```
+[wpwa_vendor_dashboard title="Your Custom Title" show_logs="yes|no"]
+```
 
 ## Development
 

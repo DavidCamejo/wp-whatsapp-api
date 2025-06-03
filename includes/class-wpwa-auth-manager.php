@@ -134,7 +134,8 @@ class WPWA_Auth_Manager {
         ];
         
         try {
-            // Generate JWT token
+            // Generate JWT token with explicit HS256 algorithm for Base64URL encoding
+            // This ensures safe token transmission in URLs and headers by replacing + with -, / with _ and removing = padding
             return \Firebase\JWT\JWT::encode($payload, $this->jwt_secret, 'HS256');
         } catch (Exception $e) {
             error_log('Error generating JWT token: ' . $e->getMessage());

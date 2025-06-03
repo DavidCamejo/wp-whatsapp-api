@@ -1,0 +1,628 @@
+/**
+ * WhatsApp Vendor Dashboard Frontend Styles
+ * 
+ * Provides styling for the vendor dashboard including connection status, 
+ * QR code display, product synchronization, and responsive layout.
+ */
+
+/* Dashboard Container */
+.wpwa-vendor-dashboard {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #333;
+}
+
+/* Dashboard Header */
+.wpwa-vendor-dashboard-header {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 15px;
+}
+
+.wpwa-vendor-dashboard-header h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+/* Dashboard Sections */
+.wpwa-vendor-dashboard-section {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.wpwa-vendor-dashboard-section h3 {
+    margin-top: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 1px solid #f1f1f1;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.wpwa-vendor-dashboard-section h4 {
+    font-size: 16px;
+    margin: 15px 0 10px;
+    color: #34495e;
+}
+
+/* Connection Status Styles */
+.wpwa-connection-status-wrapper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+#wpwa-connection-status {
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.status-connected {
+    background-color: #dff6dd;
+    color: #1e7e34;
+    border: 1px solid #c3e6cb;
+}
+
+.status-disconnected {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.status-initializing {
+    background-color: #e2f0fb;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.status-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Session Section */
+.wpwa-session-section {
+    position: relative;
+}
+
+.wpwa-session-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.wpwa-session-name {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.wpwa-session-status {
+    font-size: 14px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    width: fit-content;
+}
+
+.wpwa-session-created {
+    font-size: 13px;
+    color: #666;
+}
+
+.wpwa-no-session {
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.wpwa-session-hint {
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+    margin-top: 5px;
+}
+
+/* QR Code Container */
+.wpwa-qr-code-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.wpwa-qr-code-wrapper {
+    display: inline-block;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+#wpwa-qr-code {
+    position: relative;
+}
+
+.wpwa-qr-image {
+    max-width: 250px;
+    height: auto;
+}
+
+.wpwa-qr-instructions {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #555;
+}
+
+.wpwa-refresh-qr {
+    margin-top: 15px;
+    display: block;
+    width: 100%;
+}
+
+/* Session Actions */
+.wpwa-session-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Product Synchronization Section */
+.wpwa-sync-status-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    justify-content: space-between;
+}
+
+.wpwa-sync-stat {
+    flex: 1;
+    min-width: 140px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 15px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.wpwa-sync-count {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.wpwa-sync-label {
+    font-size: 13px;
+    color: #666;
+}
+
+.wpwa-sync-total .wpwa-sync-count {
+    color: #2c3e50;
+}
+
+.wpwa-sync-synced .wpwa-sync-count {
+    color: #28a745;
+}
+
+.wpwa-sync-pending .wpwa-sync-count {
+    color: #ffc107;
+}
+
+.wpwa-sync-failed .wpwa-sync-count {
+    color: #dc3545;
+}
+
+/* Product List */
+.wpwa-product-list {
+    margin-top: 30px;
+}
+
+.wpwa-product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.wpwa-product-card {
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    position: relative;
+}
+
+.wpwa-product-card.status-failed {
+    border-left: 3px solid #dc3545;
+}
+
+.wpwa-product-card.status-synced {
+    border-left: 3px solid #28a745;
+}
+
+.wpwa-product-card.status-pending {
+    border-left: 3px solid #ffc107;
+}
+
+.wpwa-product-thumbnail {
+    width: 100%;
+    height: 140px;
+    background-color: #f7f7f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wpwa-product-thumbnail img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.wpwa-no-image {
+    color: #999;
+    font-size: 12px;
+    text-align: center;
+    padding: 30px 0;
+}
+
+.wpwa-product-info {
+    padding: 12px;
+}
+
+.wpwa-product-name {
+    font-weight: 500;
+    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 1.3;
+}
+
+.wpwa-product-status {
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    display: inline-block;
+    background-color: #f0f0f0;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.wpwa-product-error {
+    font-size: 12px;
+    color: #dc3545;
+    margin-top: 5px;
+}
+
+.wpwa-product-time {
+    font-size: 11px;
+    color: #999;
+    margin-top: 5px;
+}
+
+.wpwa-sync-actions {
+    margin-top: 20px;
+}
+
+.wpwa-no-products {
+    padding: 15px;
+    text-align: center;
+    color: #666;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+/* Toggle Switch */
+.wpwa-toggle-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.wpwa-toggle-group label {
+    margin-right: 10px;
+}
+
+.wpwa-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.wpwa-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.wpwa-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 24px;
+    transition: .4s;
+}
+
+.wpwa-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .4s;
+}
+
+input:checked + .wpwa-toggle-slider {
+    background-color: #25d366;
+}
+
+input:focus + .wpwa-toggle-slider {
+    box-shadow: 0 0 1px #25d366;
+}
+
+input:checked + .wpwa-toggle-slider:before {
+    transform: translateX(26px);
+}
+
+/* Logs Section */
+.wpwa-logs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.wpwa-logs-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 15px;
+    background-color: #f9f9f9;
+}
+
+.wpwa-logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.wpwa-logs-table th,
+.wpwa-logs-table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.wpwa-logs-table th {
+    background-color: #f2f2f2;
+    position: sticky;
+    top: 0;
+}
+
+.wpwa-logs-table tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+.log-level-error td {
+    color: #dc3545;
+}
+
+.log-level-warning td {
+    color: #ffc107;
+}
+
+.log-level-info td {
+    color: #0c5460;
+}
+
+.wpwa-no-logs {
+    padding: 15px;
+    text-align: center;
+    color: #666;
+}
+
+/* Buttons */
+.wpwa-button {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.wpwa-button-primary {
+    background-color: #25d366;
+    color: white;
+}
+
+.wpwa-button-primary:hover {
+    background-color: #20bd5a;
+}
+
+.wpwa-button-secondary {
+    background-color: #3498db;
+    color: white;
+}
+
+.wpwa-button-secondary:hover {
+    background-color: #2980b9;
+}
+
+.wpwa-button-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.wpwa-button-danger:hover {
+    background-color: #c0392b;
+}
+
+.wpwa-button-text {
+    background-color: transparent;
+    color: #3498db;
+    padding: 4px 8px;
+}
+
+.wpwa-button-text:hover {
+    color: #2980b9;
+    background-color: #f1f9ff;
+}
+
+.wpwa-button-loading {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+/* Messages */
+.wpwa-dashboard-messages {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 350px;
+}
+
+.wpwa-alert {
+    padding: 12px 20px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    font-size: 14px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.wpwa-alert-success {
+    background-color: #dff6dd;
+    color: #1e7e34;
+    border-left: 4px solid #28a745;
+}
+
+.wpwa-alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+/* Loading Indicator */
+.wpwa-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    color: #666;
+    position: relative;
+}
+
+.wpwa-loading:after {
+    content: "";
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #3498db;
+    border-radius: 50%;
+    animation: wpwa-spin 1s linear infinite;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+@keyframes wpwa-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Error Messages */
+.wpwa-error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.wpwa-error {
+    color: #dc3545;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .wpwa-vendor-dashboard {
+        padding: 15px;
+    }
+    
+    .wpwa-sync-status-summary {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .wpwa-sync-stat {
+        min-width: 100%;
+    }
+    
+    .wpwa-product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+    
+    .wpwa-session-actions {
+        flex-direction: column;
+    }
+    
+    .wpwa-session-actions .wpwa-button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .wpwa-logs-table {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .wpwa-vendor-dashboard-header h2 {
+        font-size: 20px;
+    }
+    
+    .wpwa-product-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .wpwa-logs-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}

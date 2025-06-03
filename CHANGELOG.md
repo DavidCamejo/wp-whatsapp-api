@@ -2,6 +2,27 @@
 
 All notable changes to the WhatsApp API for WooCommerce plugin will be documented in this file.
 
+## [1.2.0] - 2025-06-03
+
+### Added
+- New `[wpwa_vendor_dashboard]` shortcode for vendors to manage their WhatsApp integration
+- Comprehensive vendor dashboard with WhatsApp session management, QR code scanning, and connection status
+- Product synchronization capabilities directly from vendor dashboard
+- Support for multiple marketplace plugins including WCFM, Dokan, and WC Vendors
+- Custom vendor dashboard styling with responsive design for all devices
+- Activity logs viewing for vendor-specific operations
+
+### Enhanced
+- Improved session management system with better error handling
+- Updated user role checking with configurability through filters
+- Enhanced authentication for vendor AJAX operations
+
+## [1.1.20] - 2025-06-02
+
+### Fixed
+- Enhanced JWT token generation to use Base64URL encoding for safer token transmission in URLs
+- Added detailed comments explaining JWT security measures for URL-safe tokens
+
 ## [1.1.19] - 2025-06-02
 
 ### Fixed

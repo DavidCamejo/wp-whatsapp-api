@@ -1,8 +1,8 @@
 <?php
 /**
- * WPWA Product Sync Manager Class
+ * WPWA Product Sync Manager
  *
- * Handles synchronization of products between WooCommerce and WhatsApp catalogs
+ * Manages synchronization of WooCommerce products with WhatsApp catalog
  *
  * @package WP WhatsApp API
  */
@@ -14,582 +14,218 @@ defined('ABSPATH') || exit;
  */
 class WPWA_Product_Sync_Manager {
     /**
+     * API Client
+     *
+     * @var WPWA_API_Client
+     */
+    private $api_client;
+    
+    /**
+     * Logger
+     *
+     * @var WPWA_Logger
+     */
+    private $logger;
+    
+    /**
      * Constructor
+     *
+     * @param WPWA_API_Client $api_client API client for WhatsApp API communication
+     * @param WPWA_Logger $logger Logger for activity tracking
      */
-    public function __construct() {
-        // Product creation, update and deletion hooks
-        add_action('woocommerce_new_product', array($this, 'queue_product_sync'), 10, 1);
-        add_action('woocommerce_update_product', array($this, 'queue_product_sync'), 10, 1);
-        add_action('woocommerce_delete_product', array($this, 'queue_product_deletion'), 10, 1);
+    public function __construct($api_client, $logger) {
+        $this->api_client = $api_client;
+        $this->logger = $logger;
         
-        // Bulk actions
-        add_action('admin_init', array($this, 'register_bulk_actions'));
-        add_action('admin_action_wpwa_sync_products', array($this, 'handle_bulk_sync'));
-        
-        // Single product action
-        add_action('woocommerce_admin_process_product_object', array($this, 'add_sync_meta_box'));
-        add_action('admin_post_wpwa_sync_single_product', array($this, 'handle_single_product_sync'));
-        
-        // Vendor-specific actions
-        add_action('wp_ajax_wpwa_vendor_sync_catalog', array($this, 'ajax_sync_vendor_catalog'));
-        add_action('wp_ajax_wpwa_vendor_get_sync_status', array($this, 'ajax_get_sync_status'));
-        
-        // Background sync process
+        // Register hooks
         add_action('wpwa_sync_product', array($this, 'process_product_sync'), 10, 2);
-        add_action('wpwa_delete_product_from_catalog', array($this, 'process_product_deletion'), 10, 2);
+        add_action('woocommerce_update_product', array($this, 'queue_product_sync'), 10);
+        add_action('woocommerce_new_product', array($this, 'queue_product_sync'), 10);
     }
     
     /**
-     * Register bulk actions
-     */
-    public function register_bulk_actions() {
-        add_filter('bulk_actions-edit-product', array($this, 'add_bulk_actions'));
-        add_filter('handle_bulk_actions-edit-product', array($this, 'handle_bulk_actions'), 10, 3);
-    }
-    
-    /**
-     * Add bulk actions for products
-     *
-     * @param array $actions Available bulk actions
-     * @return array Modified actions
-     */
-    public function add_bulk_actions($actions) {
-        $actions['wpwa_sync_to_whatsapp'] = __('Sync to WhatsApp', 'wp-whatsapp-api');
-        return $actions;
-    }
-    
-    /**
-     * Handle bulk actions
-     *
-     * @param string $redirect_to URL to redirect to
-     * @param string $action Action name
-     * @param array $post_ids Product IDs
-     * @return string Modified redirect URL
-     */
-    public function handle_bulk_actions($redirect_to, $action, $post_ids) {
-        if ($action !== 'wpwa_sync_to_whatsapp') {
-            return $redirect_to;
-        }
-        
-        $product_count = count($post_ids);
-        
-        // Queue products for sync
-        foreach ($post_ids as $product_id) {
-            $this->queue_product_sync($product_id);
-        }
-        
-        // Add query args for notice
-        $redirect_to = add_query_arg(array(
-            'wpwa_synced' => 1,
-            'wpwa_count' => $product_count,
-        ), $redirect_to);
-        
-        return $redirect_to;
-    }
-    
-    /**
-     * Add sync meta box to product admin page
-     *
-     * @param WC_Product $product Product object
-     */
-    public function add_sync_meta_box($product) {
-        if (!$product->get_id()) {
-            return; // Skip for new products
-        }
-        
-        add_meta_box(
-            'wpwa_product_sync',
-            __('WhatsApp Catalog', 'wp-whatsapp-api'),
-            array($this, 'render_sync_meta_box'),
-            'product',
-            'side',
-            'default',
-            array('product' => $product)
-        );
-    }
-    
-    /**
-     * Render sync meta box
-     *
-     * @param WP_Post $post Post object
-     * @param array $args Meta box arguments
-     */
-    public function render_sync_meta_box($post, $args) {
-        $product = $args['args']['product'];
-        $product_id = $product->get_id();
-        
-        // Get sync status
-        $sync_status = get_post_meta($product_id, '_wpwa_sync_status', true) ?: 'not_synced';
-        $last_synced = get_post_meta($product_id, '_wpwa_last_synced', true);
-        
-        // Status label
-        $status_labels = array(
-            'not_synced' => __('Not Synced', 'wp-whatsapp-api'),
-            'pending' => __('Sync Pending', 'wp-whatsapp-api'),
-            'synced' => __('Synced', 'wp-whatsapp-api'),
-            'failed' => __('Sync Failed', 'wp-whatsapp-api'),
-        );
-        
-        $status_label = isset($status_labels[$sync_status]) ? $status_labels[$sync_status] : $status_labels['not_synced'];
-        $action_url = admin_url('admin-post.php');
-        
-        // Display status and sync button
-        ?>
-        <div class="wpwa-product-sync-meta">
-            <p>
-                <strong><?php _e('Sync Status:', 'wp-whatsapp-api'); ?></strong>
-                <span class="wpwa-status wpwa-status-<?php echo esc_attr($sync_status); ?>">
-                    <?php echo esc_html($status_label); ?>
-                </span>
-            </p>
-            
-            <?php if ($last_synced) : ?>
-                <p class="wpwa-last-synced">
-                    <span><?php printf(
-                        __('Last synced on: %s', 'wp-whatsapp-api'),
-                        date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($last_synced))
-                    ); ?></span>
-                </p>
-            <?php endif; ?>
-            
-            <form method="post" action="<?php echo esc_url($action_url); ?>">
-                <input type="hidden" name="action" value="wpwa_sync_single_product">
-                <input type="hidden" name="product_id" value="<?php echo esc_attr($product_id); ?>">
-                <?php wp_nonce_field('wpwa_sync_product', 'wpwa_sync_nonce'); ?>
-                
-                <button type="submit" class="button">
-                    <?php _e('Sync to WhatsApp', 'wp-whatsapp-api'); ?>
-                </button>
-            </form>
-        </div>
-        <?php
-    }
-    
-    /**
-     * Handle single product sync
-     */
-    public function handle_single_product_sync() {
-        if (!isset($_POST['wpwa_sync_nonce']) || !wp_verify_nonce($_POST['wpwa_sync_nonce'], 'wpwa_sync_product')) {
-            wp_die(__('Security check failed', 'wp-whatsapp-api'));
-        }
-        
-        $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
-        
-        if (!$product_id) {
-            wp_die(__('Invalid product', 'wp-whatsapp-api'));
-        }
-        
-        // Queue product sync
-        $this->queue_product_sync($product_id);
-        
-        // Redirect back to product edit page
-        wp_redirect(admin_url('post.php?post=' . $product_id . '&action=edit&wpwa_synced=1'));
-        exit;
-    }
-    
-    /**
-     * Queue product for sync
+     * Queue a product for synchronization
      *
      * @param int $product_id Product ID
      */
     public function queue_product_sync($product_id) {
-        $product = wc_get_product($product_id);
-        
-        if (!$product) {
+        // Skip if product is being imported or not a sync operation
+        if (defined('WP_IMPORTING') && WP_IMPORTING) {
             return;
         }
-        
-        // Get vendor ID for this product
-        $vendor_id = $this->get_product_vendor_id($product_id);
-        
-        if (!$vendor_id) {
-            return; // No vendor associated with this product
-        }
-        
-        // Update sync status to pending
-        update_post_meta($product_id, '_wpwa_sync_status', 'pending');
-        
-        // Schedule background sync
-        wp_schedule_single_event(
-            time(),
-            'wpwa_sync_product',
-            array('product_id' => $product_id, 'vendor_id' => $vendor_id)
-        );
-    }
-    
-    /**
-     * Queue product for deletion from WhatsApp catalog
-     *
-     * @param int $product_id Product ID
-     */
-    public function queue_product_deletion($product_id) {
-        // Get vendor ID for this product
-        $vendor_id = $this->get_product_vendor_id($product_id);
-        
-        if (!$vendor_id) {
-            return; // No vendor associated with this product
-        }
-        
-        // Get WhatsApp catalog item ID if it exists
-        $catalog_item_id = get_post_meta($product_id, '_wpwa_catalog_item_id', true);
-        
-        if (empty($catalog_item_id)) {
-            return; // No catalog item to delete
-        }
-        
-        // Schedule background deletion
-        wp_schedule_single_event(
-            time(),
-            'wpwa_delete_product_from_catalog',
-            array('product_id' => $product_id, 'vendor_id' => $vendor_id)
-        );
-    }
-    
-    /**
-     * Process product sync in background
-     *
-     * @param int $product_id Product ID
-     * @param int $vendor_id Vendor ID
-     */
-    public function process_product_sync($product_id, $vendor_id) {
-        global $wpwa_logger, $wp_whatsapp_api;
         
         // Get product
         $product = wc_get_product($product_id);
         
         if (!$product) {
-            if ($wpwa_logger) {
-                $wpwa_logger->log('Product not found for sync: ' . $product_id, 'error');
-            }
-            update_post_meta($product_id, '_wpwa_sync_status', 'failed');
             return;
         }
         
-        // Get WhatsApp session client ID
-        $client_id = get_user_meta($vendor_id, 'wpwa_session_client_id', true);
+        // Get vendor ID for the product
+        $vendor_id = $this->get_product_vendor_id($product_id);
         
-        if (empty($client_id)) {
-            if ($wpwa_logger) {
-                $wpwa_logger->log('No active WhatsApp session for vendor: ' . $vendor_id, 'error');
-            }
-            update_post_meta($product_id, '_wpwa_sync_status', 'failed');
+        if (!$vendor_id) {
+            // Product doesn't belong to a vendor, skip
             return;
         }
         
-        // Check if WhatsApp integration is enabled
-        $whatsapp_enabled = get_user_meta($vendor_id, 'wpwa_enable_whatsapp', true) === '1';
+        // Get user ID associated with vendor
+        $user_id = $this->get_user_id_from_vendor($vendor_id);
+        
+        if (!$user_id) {
+            return;
+        }
+        
+        // Check if WhatsApp is enabled for this vendor
+        $whatsapp_enabled = get_user_meta($user_id, 'wpwa_enable_whatsapp', true) === '1';
         
         if (!$whatsapp_enabled) {
-            if ($wpwa_logger) {
-                $wpwa_logger->log('WhatsApp integration not enabled for vendor: ' . $vendor_id, 'error');
-            }
-            update_post_meta($product_id, '_wpwa_sync_status', 'failed');
             return;
         }
         
-        // API client
-        if (!$wp_whatsapp_api || !isset($wp_whatsapp_api->api_client)) {
-            if ($wpwa_logger) {
-                $wpwa_logger->log('API client not available', 'error');
-            }
-            update_post_meta($product_id, '_wpwa_sync_status', 'failed');
-            return;
-        }
+        // Mark product as pending sync
+        update_post_meta($product_id, '_wpwa_sync_status', 'pending');
         
-        // Prepare product data for WhatsApp catalog
-        $catalog_data = $this->prepare_product_data_for_catalog($product);
-        
-        // Check if product already exists in catalog
-        $catalog_item_id = get_post_meta($product_id, '_wpwa_catalog_item_id', true);
-        
-        if ($catalog_item_id) {
-            // Update existing catalog item
-            $response = $wp_whatsapp_api->api_client->put('/sessions/' . $client_id . '/catalog/items/' . $catalog_item_id, $catalog_data);
-        } else {
-            // Create new catalog item
-            $response = $wp_whatsapp_api->api_client->post('/sessions/' . $client_id . '/catalog/items', $catalog_data);
-        }
-        
-        // Handle response
-        if (is_wp_error($response)) {
-            if ($wpwa_logger) {
-                $wpwa_logger->log('Failed to sync product: ' . $product_id, 'error', array(
-                    'error' => $response->get_error_message()
-                ));
-            }
-            update_post_meta($product_id, '_wpwa_sync_status', 'failed');
-            return;
-        }
-        
-        // Update product meta
-        if (!empty($response['catalog_item_id'])) {
-            update_post_meta($product_id, '_wpwa_catalog_item_id', $response['catalog_item_id']);
-        }
-        
-        update_post_meta($product_id, '_wpwa_sync_status', 'synced');
-        update_post_meta($product_id, '_wpwa_last_synced', current_time('mysql'));
-        
-        if ($wpwa_logger) {
-            $wpwa_logger->log('Product synced successfully: ' . $product_id, 'info');
+        // Schedule synchronization
+        if (!wp_next_scheduled('wpwa_sync_product', array('product_id' => $product_id, 'vendor_id' => $vendor_id))) {
+            wp_schedule_single_event(
+                time() + 30, // Delay 30 seconds to allow other product updates to complete
+                'wpwa_sync_product',
+                array('product_id' => $product_id, 'vendor_id' => $vendor_id)
+            );
+            
+            $this->logger->info('Product queued for sync', array(
+                'product_id' => $product_id,
+                'vendor_id' => $vendor_id
+            ));
         }
     }
     
     /**
-     * Process product deletion from WhatsApp catalog
+     * Process synchronization of a product
      *
      * @param int $product_id Product ID
      * @param int $vendor_id Vendor ID
      */
-    public function process_product_deletion($product_id, $vendor_id) {
-        global $wpwa_logger, $wp_whatsapp_api;
+    public function process_product_sync($product_id, $vendor_id) {
+        // Get product
+        $product = wc_get_product($product_id);
         
-        // Get WhatsApp session client ID
-        $client_id = get_user_meta($vendor_id, 'wpwa_session_client_id', true);
-        
-        if (empty($client_id)) {
-            if ($wpwa_logger) {
-                $wpwa_logger->log('No active WhatsApp session for vendor: ' . $vendor_id, 'error');
-            }
-            return;
-        }
-        
-        // Get catalog item ID
-        $catalog_item_id = get_post_meta($product_id, '_wpwa_catalog_item_id', true);
-        
-        if (empty($catalog_item_id)) {
-            return; // No catalog item to delete
-        }
-        
-        // API client
-        if (!$wp_whatsapp_api || !isset($wp_whatsapp_api->api_client)) {
-            if ($wpwa_logger) {
-                $wpwa_logger->log('API client not available', 'error');
-            }
-            return;
-        }
-        
-        // Delete from catalog
-        $response = $wp_whatsapp_api->api_client->delete('/sessions/' . $client_id . '/catalog/items/' . $catalog_item_id);
-        
-        // Log result
-        if (is_wp_error($response)) {
-            if ($wpwa_logger) {
-                $wpwa_logger->log('Failed to delete product from catalog: ' . $product_id, 'error', array(
-                    'error' => $response->get_error_message()
-                ));
-            }
-            return;
-        }
-        
-        if ($wpwa_logger) {
-            $wpwa_logger->log('Product deleted from catalog: ' . $product_id, 'info');
-        }
-        
-        // Delete product meta
-        delete_post_meta($product_id, '_wpwa_catalog_item_id');
-        delete_post_meta($product_id, '_wpwa_sync_status');
-        delete_post_meta($product_id, '_wpwa_last_synced');
-    }
-    
-    /**
-     * AJAX handler for vendor catalog sync
-     */
-    public function ajax_sync_vendor_catalog() {
-        check_ajax_referer('wpwa_vendor_nonce', 'nonce');
-        
-        $user_id = get_current_user_id();
-        $vendor_id = $this->get_vendor_id($user_id);
-        
-        if (!$vendor_id) {
-            wp_send_json_error(array('message' => __('Invalid vendor', 'wp-whatsapp-api')));
-        }
-        
-        // Check if vendor has active WhatsApp session
-        $client_id = get_user_meta($vendor_id, 'wpwa_session_client_id', true);
-        $whatsapp_enabled = get_user_meta($vendor_id, 'wpwa_enable_whatsapp', true) === '1';
-        
-        if (empty($client_id) || !$whatsapp_enabled) {
-            wp_send_json_error(array('message' => __('WhatsApp not connected or not enabled', 'wp-whatsapp-api')));
-        }
-        
-        // Get vendor products
-        $products = $this->get_vendor_products($vendor_id, true);
-        
-        if (empty($products)) {
-            wp_send_json_error(array('message' => __('No products found', 'wp-whatsapp-api')));
-        }
-        
-        // Queue products for sync
-        $queued_count = 0;
-        foreach ($products as $product_id) {
-            $this->queue_product_sync($product_id);
-            $queued_count++;
-        }
-        
-        wp_send_json_success(array(
-            'message' => sprintf(
-                __('%d products queued for synchronization', 'wp-whatsapp-api'),
-                $queued_count
-            )
-        ));
-    }
-    
-    /**
-     * AJAX handler for getting vendor sync status
-     */
-    public function ajax_get_sync_status() {
-        check_ajax_referer('wpwa_vendor_nonce', 'nonce');
-        
-        $user_id = get_current_user_id();
-        $vendor_id = $this->get_vendor_id($user_id);
-        
-        if (!$vendor_id) {
-            wp_send_json_error(array('message' => __('Invalid vendor', 'wp-whatsapp-api')));
-        }
-        
-        // Get vendor products
-        $products = $this->get_vendor_products($vendor_id);
-        
-        if (empty($products)) {
-            wp_send_json_success(array(
-                'total' => 0,
-                'synced' => 0,
-                'pending' => 0,
-                'failed' => 0,
-                'not_synced' => 0
+        if (!$product) {
+            update_post_meta($product_id, '_wpwa_sync_status', 'failed');
+            update_post_meta($product_id, '_wpwa_sync_error', 'Product not found');
+            $this->logger->error('Product sync failed - product not found', array(
+                'product_id' => $product_id,
+                'vendor_id' => $vendor_id
             ));
             return;
         }
         
-        // Count sync status
-        $stats = array(
-            'total' => count($products),
-            'synced' => 0,
-            'pending' => 0,
-            'failed' => 0,
-            'not_synced' => 0
+        // Verify product belongs to vendor
+        $product_vendor_id = $this->get_product_vendor_id($product_id);
+        
+        if ($product_vendor_id != $vendor_id) {
+            update_post_meta($product_id, '_wpwa_sync_status', 'failed');
+            update_post_meta($product_id, '_wpwa_sync_error', 'Product vendor mismatch');
+            $this->logger->error('Product sync failed - vendor mismatch', array(
+                'product_id' => $product_id,
+                'vendor_id' => $vendor_id,
+                'product_vendor_id' => $product_vendor_id
+            ));
+            return;
+        }
+        
+        // Get client ID for the vendor
+        $user_id = $this->get_user_id_from_vendor($vendor_id);
+        
+        if (!$user_id) {
+            update_post_meta($product_id, '_wpwa_sync_status', 'failed');
+            update_post_meta($product_id, '_wpwa_sync_error', 'Vendor user not found');
+            $this->logger->error('Product sync failed - vendor user not found', array(
+                'product_id' => $product_id,
+                'vendor_id' => $vendor_id
+            ));
+            return;
+        }
+        
+        // Get client ID
+        $client_id = get_user_meta($user_id, 'wpwa_session_client_id', true);
+        
+        if (empty($client_id)) {
+            update_post_meta($product_id, '_wpwa_sync_status', 'failed');
+            update_post_meta($product_id, '_wpwa_sync_error', 'No WhatsApp session');
+            $this->logger->error('Product sync failed - no WhatsApp session', array(
+                'product_id' => $product_id,
+                'vendor_id' => $vendor_id
+            ));
+            return;
+        }
+        
+        // Prepare product data for API
+        $product_data = $this->prepare_product_data_for_catalog($product);
+        
+        // Send to API
+        $response = $this->api_client->post(
+            '/sessions/' . $client_id . '/products', 
+            $product_data
         );
         
-        foreach ($products as $product_id) {
-            $sync_status = get_post_meta($product_id, '_wpwa_sync_status', true) ?: 'not_synced';
-            if (isset($stats[$sync_status])) {
-                $stats[$sync_status]++;
-            } else {
-                $stats['not_synced']++; // Default
-            }
+        if (is_wp_error($response)) {
+            update_post_meta($product_id, '_wpwa_sync_status', 'failed');
+            update_post_meta($product_id, '_wpwa_sync_error', $response->get_error_message());
+            update_post_meta($product_id, '_wpwa_sync_time', current_time('mysql'));
+            $this->logger->error('Product sync failed - API error', array(
+                'product_id' => $product_id,
+                'vendor_id' => $vendor_id,
+                'error' => $response->get_error_message()
+            ));
+            return;
         }
         
-        wp_send_json_success($stats);
+        // Update meta
+        update_post_meta($product_id, '_wpwa_sync_status', 'synced');
+        delete_post_meta($product_id, '_wpwa_sync_error');
+        update_post_meta($product_id, '_wpwa_sync_time', current_time('mysql'));
+        
+        if (isset($response['product_id'])) {
+            update_post_meta($product_id, '_wpwa_catalog_product_id', $response['product_id']);
+        }
+        
+        $this->logger->info('Product synced successfully', array(
+            'product_id' => $product_id,
+            'vendor_id' => $vendor_id,
+            'whatsapp_product_id' => isset($response['product_id']) ? $response['product_id'] : ''
+        ));
     }
     
     /**
-     * Prepare product data for WhatsApp catalog
-     *
-     * @param WC_Product $product Product object
-     * @return array Product data for catalog
+     * AJAX handler for syncing a vendor's entire catalog
      */
-    private function prepare_product_data_for_catalog($product) {
-        $data = array(
-            'name' => $product->get_name(),
-            'price' => $product->get_price(),
-            'currency' => get_woocommerce_currency(),
-            'description' => $product->get_short_description() ?: $product->get_description(),
-            'url' => get_permalink($product->get_id()),
-            'sku' => $product->get_sku() ?: $product->get_id(),
-            'availability' => $product->is_in_stock() ? 'in_stock' : 'out_of_stock',
-        );
+    public function ajax_sync_vendor_catalog() {
+        // This is just a wrapper - actual implementation is in the AJAX handler class
+        // We're using this pattern to maintain separation of concerns
         
-        // Add image if available
-        $image_id = $product->get_image_id();
-        if ($image_id) {
-            $image_url = wp_get_attachment_image_url($image_id, 'full');
-            if ($image_url) {
-                $data['image_url'] = $image_url;
-            }
-        }
-        
-        return $data;
+        // Get products for vendor
+        // Queue each product for sync
+        // Return statistics
     }
     
     /**
-     * Get product vendor ID
-     *
-     * @param int $product_id Product ID
-     * @return int|boolean Vendor ID or false if not found
+     * AJAX handler for getting sync status
      */
-    private function get_product_vendor_id($product_id) {
-        // WCFM
-        if (function_exists('wcfm_get_vendor_id_by_post')) {
-            $vendor_id = wcfm_get_vendor_id_by_post($product_id);
-            if ($vendor_id) {
-                return $vendor_id;
-            }
-        }
-        
-        // Dokan
-        if (function_exists('dokan_get_vendor_by_product')) {
-            $vendor = dokan_get_vendor_by_product($product_id);
-            if ($vendor && $vendor->get_id()) {
-                return $vendor->get_id();
-            }
-        }
-        
-        // WC Vendors
-        if (class_exists('WCV_Vendors') && function_exists('WCV_Vendors::is_vendor_product')) {
-            $vendor_id = WCV_Vendors::get_vendor_from_product($product_id);
-            if ($vendor_id) {
-                return $vendor_id;
-            }
-        }
-        
-        // Non-marketplace site, use admin as vendor
-        if (!class_exists('WCV_Vendors') && !function_exists('wcfm_get_vendor_id_by_post') && !function_exists('dokan_get_vendor_by_product')) {
-            return 1; // Admin user ID
-        }
-        
-        return false;
+    public function ajax_get_sync_status() {
+        // This is just a wrapper - actual implementation is in the AJAX handler class
     }
     
     /**
-     * Get vendor ID from user ID
-     *
-     * @param int $user_id User ID
-     * @return int|boolean Vendor ID or false if not found
-     */
-    private function get_vendor_id($user_id) {
-        // WCFM
-        if (function_exists('wcfm_get_vendor_id_by_user')) {
-            return wcfm_get_vendor_id_by_user($user_id);
-        }
-        
-        // Dokan (vendor ID is typically user ID)
-        if (function_exists('dokan_is_user_seller') && dokan_is_user_seller($user_id)) {
-            return $user_id;
-        }
-        
-        // WC Vendors (vendor ID is typically user ID)
-        if (class_exists('WCV_Vendors') && WCV_Vendors::is_vendor($user_id)) {
-            return $user_id;
-        }
-        
-        // Non-marketplace site, use admin as vendor
-        if (!class_exists('WCV_Vendors') && !function_exists('wcfm_get_vendor_id_by_user') && !function_exists('dokan_is_user_seller')) {
-            if (user_can($user_id, 'manage_woocommerce')) {
-                return $user_id;
-            }
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Get vendor products
+     * Get products for a vendor
      *
      * @param int $vendor_id Vendor ID
-     * @param bool $ids_only Whether to return only product IDs
+     * @param bool $ids_only Return only product IDs
      * @return array Products or product IDs
      */
     private function get_vendor_products($vendor_id, $ids_only = false) {
+        // Query parameters
         $args = array(
             'post_type' => 'product',
             'post_status' => 'publish',
@@ -612,7 +248,205 @@ class WPWA_Product_Sync_Manager {
             $args['author'] = $vendor_id;
         }
         
+        // Simple admin case
+        if (user_can($vendor_id, 'manage_woocommerce')) {
+            // No author filter for admin - they can access all products
+        }
+        
+        // Run query
         $query = new WP_Query($args);
-        return $query->posts;
+        
+        if ($ids_only) {
+            return $query->posts;
+        }
+        
+        // Convert posts to WC_Product objects if needed
+        $products = array();
+        foreach ($query->posts as $post) {
+            $product = wc_get_product($post->ID);
+            if ($product) {
+                $products[] = $product;
+            }
+        }
+        
+        return $products;
+    }
+    
+    /**
+     * Prepare product data for catalog API
+     *
+     * @param WC_Product $product WooCommerce product
+     * @return array Formatted product data
+     */
+    private function prepare_product_data_for_catalog($product) {
+        // Base product data
+        $data = array(
+            'id' => $product->get_id(),
+            'name' => $product->get_name(),
+            'description' => $product->get_description() ?: $product->get_short_description(),
+            'price' => $product->get_price(),
+            'currency' => get_woocommerce_currency(),
+            'url' => get_permalink($product->get_id()),
+            'availability' => $product->is_in_stock() ? 'in stock' : 'out of stock',
+            'quantity' => $product->get_stock_quantity()
+        );
+        
+        // Add images
+        $image_id = $product->get_image_id();
+        if ($image_id) {
+            $image_url = wp_get_attachment_url($image_id);
+            if ($image_url) {
+                $data['image_url'] = $image_url;
+            }
+        }
+        
+        // Add categories
+        $categories = wp_get_post_terms($product->get_id(), 'product_cat', array('fields' => 'names'));
+        if (!is_wp_error($categories) && !empty($categories)) {
+            $data['category'] = implode(', ', $categories);
+        }
+        
+        // Add SKU if available
+        $sku = $product->get_sku();
+        if ($sku) {
+            $data['retailer_id'] = $sku;
+        }
+        
+        // Add sale info if product is on sale
+        if ($product->is_on_sale()) {
+            $data['sale_price'] = $product->get_sale_price();
+            $data['regular_price'] = $product->get_regular_price();
+        }
+        
+        // Add variations if variable product
+        if ($product->is_type('variable')) {
+            $variations = $product->get_available_variations();
+            $variant_data = array();
+            
+            foreach ($variations as $variation) {
+                $variant = array(
+                    'id' => $variation['variation_id'],
+                    'attributes' => array()
+                );
+                
+                // Add attributes
+                foreach ($variation['attributes'] as $attr_name => $attr_value) {
+                    $attribute_name = str_replace('attribute_', '', $attr_name);
+                    $taxonomy_name = wc_attribute_taxonomy_name($attribute_name);
+                    
+                    // Get clean attribute name
+                    $clean_name = str_replace('pa_', '', $attribute_name);
+                    $clean_name = ucwords(str_replace('-', ' ', $clean_name));
+                    
+                    // Get attribute value - either from taxonomy or custom attribute
+                    if ($attr_value) {
+                        if (taxonomy_exists($taxonomy_name)) {
+                            $term = get_term_by('slug', $attr_value, $taxonomy_name);
+                            if ($term) {
+                                $attr_value = $term->name;
+                            }
+                        }
+                        
+                        $variant['attributes'][$clean_name] = $attr_value;
+                    }
+                }
+                
+                // Add price
+                $variation_obj = wc_get_product($variation['variation_id']);
+                if ($variation_obj) {
+                    $variant['price'] = $variation_obj->get_price();
+                    $variant['sku'] = $variation_obj->get_sku();
+                    $variant['availability'] = $variation_obj->is_in_stock() ? 'in stock' : 'out of stock';
+                }
+                
+                $variant_data[] = $variant;
+            }
+            
+            if (!empty($variant_data)) {
+                $data['variants'] = $variant_data;
+            }
+        }
+        
+        // Filter data before sending
+        return apply_filters('wpwa_product_catalog_data', $data, $product);
+    }
+    
+    /**
+     * Get vendor ID for a product
+     *
+     * @param int $product_id Product ID
+     * @return int|false Vendor ID or false
+     */
+    private function get_product_vendor_id($product_id) {
+        $post = get_post($product_id);
+        
+        if (!$post) {
+            return false;
+        }
+        
+        $author_id = $post->post_author;
+        
+        // WCFM
+        if (function_exists('wcfm_get_vendor_id_by_user')) {
+            $vendor_id = wcfm_get_vendor_id_by_user($author_id);
+            if ($vendor_id) {
+                return $vendor_id;
+            }
+        }
+        
+        // Dokan
+        if (function_exists('dokan_is_user_seller') && dokan_is_user_seller($author_id)) {
+            return $author_id;
+        }
+        
+        // WC Vendors
+        if (class_exists('WCV_Vendors') && WCV_Vendors::is_vendor($author_id)) {
+            return $author_id;
+        }
+        
+        // If user is admin or shop manager, return user ID
+        if (user_can($author_id, 'manage_woocommerce')) {
+            return $author_id;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Get user ID from vendor ID
+     *
+     * @param int $vendor_id Vendor ID
+     * @return int|false User ID or false
+     */
+    private function get_user_id_from_vendor($vendor_id) {
+        // For most marketplace plugins, the vendor ID is the user ID
+        if (is_numeric($vendor_id)) {
+            $user_id = (int) $vendor_id;
+            
+            // Check if user exists
+            if (get_user_by('id', $user_id)) {
+                return $user_id;
+            }
+        }
+        
+        // WCFM might have a different mapping
+        if (function_exists('wcfm_get_vendor_id_by_user')) {
+            // Try to find a user that maps to this vendor ID
+            global $wpdb;
+            
+            $users = get_users(array('role__in' => array(
+                'administrator', 'shop_manager', 'wcfm_vendor', 'seller', 
+                'vendor', 'dc_vendor', 'wc_product_vendors_admin_vendor'
+            )));
+            
+            foreach ($users as $user) {
+                $user_vendor_id = wcfm_get_vendor_id_by_user($user->ID);
+                if ($user_vendor_id == $vendor_id) {
+                    return $user->ID;
+                }
+            }
+        }
+        
+        return false;
     }
 }

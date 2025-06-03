@@ -1,30 +1,27 @@
 <?php
 /**
- * Vendor Session Manager Class
+ * WPWA Vendor Session Manager
  *
- * Handles creation, management, and disconnection of WhatsApp sessions for vendors.
+ * Manages WhatsApp sessions for vendors in a multi-vendor environment
  *
- * @package WP_WhatsApp_API
+ * @package WP WhatsApp API
  */
 
-// Exit if accessed directly
-if (!defined('ABSPATH')) {
-    exit;
-}
+defined('ABSPATH') || exit;
 
 /**
- * Vendor Session Manager Class
+ * WPWA Vendor Session Manager
  */
 class WPWA_Vendor_Session_Manager {
     /**
-     * API client instance
+     * API Client
      *
      * @var WPWA_API_Client
      */
     private $api_client;
     
     /**
-     * Logger instance
+     * Logger
      *
      * @var WPWA_Logger
      */
@@ -33,8 +30,8 @@ class WPWA_Vendor_Session_Manager {
     /**
      * Constructor
      *
-     * @param WPWA_API_Client $api_client API client instance
-     * @param WPWA_Logger     $logger     Logger instance
+     * @param WPWA_API_Client $api_client API client for WhatsApp API communication
+     * @param WPWA_Logger $logger Logger for activity tracking
      */
     public function __construct($api_client, $logger) {
         $this->api_client = $api_client;
@@ -44,154 +41,164 @@ class WPWA_Vendor_Session_Manager {
     /**
      * Create a new WhatsApp session for a vendor
      *
-     * @param int    $vendor_id    Vendor ID
+     * @param int $vendor_id Vendor ID
      * @param string $session_name Name for the session
      * @return array|false Session data or false on failure
      */
     public function create_vendor_session($vendor_id, $session_name) {
-        if (!$vendor_id) {
-            $this->logger->error('Failed to create session: No vendor ID provided');
-            return false;
-        }
-        
         // Get vendor data
         $vendor_data = $this->get_vendor_data($vendor_id);
         if (!$vendor_data) {
-            $this->logger->error('Failed to create session: Invalid vendor', array('vendor_id' => $vendor_id));
+            $this->logger->error('Failed to create session - invalid vendor data', array(
+                'vendor_id' => $vendor_id
+            ));
             return false;
         }
         
-        // Prepare session configuration
+        // Get user ID associated with vendor
+        $user_id = $this->get_user_id_from_vendor($vendor_id);
+        if (!$user_id) {
+            $this->logger->error('Failed to create session - could not map vendor to user', array(
+                'vendor_id' => $vendor_id
+            ));
+            return false;
+        }
+        
+        // Configuration for new session
         $session_config = array(
-            'name' => $session_name,
+            'name' => sanitize_text_field($session_name),
             'vendor_id' => $vendor_id,
-            'vendor_data' => array(
-                'store_name' => $vendor_data['store_name'],
-                'email' => $vendor_data['email']
-            )
+            'vendor_name' => $vendor_data['store_name'] ?: 'Vendor ' . $vendor_id,
+            'vendor_url' => $vendor_data['store_url'] ?: '',
+            'webhook_url' => add_query_arg(array(
+                'wpwa_webhook' => 'vendor',
+                'vendor_id' => $vendor_id,
+                'token' => wp_create_nonce('wpwa_webhook_' . $vendor_id)
+            ), get_site_url())
         );
         
-        // Request session creation from API
+        // Create session via API
         $response = $this->api_client->post('/sessions', $session_config);
         
         if (is_wp_error($response)) {
-            $this->logger->error('API error when creating vendor session', array(
+            $this->logger->error('API error creating session', array(
                 'vendor_id' => $vendor_id,
                 'error' => $response->get_error_message()
             ));
             return false;
         }
         
-        // Verify the response contains necessary data
-        if (!isset($response['client_id']) || !isset($response['status'])) {
-            $this->logger->error('Invalid response from API when creating session', array(
+        if (!isset($response['client_id']) || !isset($response['qr_code'])) {
+            $this->logger->error('Invalid API response creating session', array(
                 'vendor_id' => $vendor_id,
                 'response' => $response
             ));
             return false;
         }
         
-        // Associate the session with this vendor
-        $user_id = $this->get_user_id_from_vendor($vendor_id);
-        if ($user_id) {
-            update_user_meta($user_id, 'wpwa_session_client_id', $response['client_id']);
-            update_user_meta($user_id, 'wpwa_session_status', $response['status']);
-            update_user_meta($user_id, 'wpwa_session_name', $session_name);
-            update_user_meta($user_id, 'wpwa_session_created', current_time('mysql'));
-        }
+        // Store session data in user meta
+        $client_id = sanitize_text_field($response['client_id']);
+        update_user_meta($user_id, 'wpwa_session_client_id', $client_id);
+        update_user_meta($user_id, 'wpwa_session_name', $session_name);
+        update_user_meta($user_id, 'wpwa_session_status', 'initializing');
+        update_user_meta($user_id, 'wpwa_session_created', current_time('mysql'));
         
-        // Association on API side
-        $this->associate_session_to_vendor($response['client_id'], $vendor_id);
+        // Associate session with vendor in API system
+        $this->associate_session_to_vendor($client_id, $vendor_id);
         
-        $this->logger->info('Created new vendor session', array(
+        $this->logger->info('Created new WhatsApp session', array(
             'vendor_id' => $vendor_id,
-            'client_id' => $response['client_id'],
-            'session_name' => $session_name
+            'session_name' => $session_name,
+            'client_id' => $client_id
         ));
         
-        return $response;
+        return array(
+            'client_id' => $client_id,
+            'qr_code' => $response['qr_code'],
+            'status' => 'initializing'
+        );
     }
     
     /**
-     * Get all sessions for a vendor
+     * Get active sessions for a vendor
      *
      * @param int $vendor_id Vendor ID
-     * @return array List of sessions
+     * @return array Sessions data
      */
     public function get_vendor_sessions($vendor_id) {
-        if (!$vendor_id) {
+        // Get user ID
+        $user_id = $this->get_user_id_from_vendor($vendor_id);
+        if (!$user_id) {
             return array();
         }
         
-        // Query API for sessions associated with this vendor
-        $response = $this->api_client->get('/vendor/' . $vendor_id . '/sessions');
-        
-        if (is_wp_error($response)) {
-            $this->logger->error('API error when fetching vendor sessions', array(
-                'vendor_id' => $vendor_id,
-                'error' => $response->get_error_message()
-            ));
+        // Check if user has an active session
+        $client_id = get_user_meta($user_id, 'wpwa_session_client_id', true);
+        if (!$client_id) {
             return array();
         }
         
-        if (!isset($response['sessions']) || !is_array($response['sessions'])) {
-            return array();
-        }
+        // Get session data
+        $session_name = get_user_meta($user_id, 'wpwa_session_name', true);
+        $session_status = get_user_meta($user_id, 'wpwa_session_status', true);
+        $session_created = get_user_meta($user_id, 'wpwa_session_created', true);
         
-        return $response['sessions'];
+        return array(
+            array(
+                'client_id' => $client_id,
+                'session_name' => $session_name,
+                'status' => $session_status,
+                'created_at' => $session_created
+            )
+        );
     }
     
     /**
-     * Disconnect a session for a vendor
+     * Disconnect a vendor's WhatsApp session
      *
-     * @param int    $vendor_id Vendor ID
-     * @param string $client_id Session client ID
-     * @return boolean Success status
+     * @param int $vendor_id Vendor ID
+     * @param string $client_id Client ID of the session to disconnect
+     * @return bool Success status
      */
     public function disconnect_vendor_session($vendor_id, $client_id) {
-        if (!$vendor_id || !$client_id) {
+        // Validate vendor ownership of session
+        $user_id = $this->get_user_id_from_vendor($vendor_id);
+        if (!$user_id) {
+            $this->logger->error('Failed to disconnect session - invalid vendor', array(
+                'vendor_id' => $vendor_id,
+                'client_id' => $client_id
+            ));
             return false;
         }
         
-        // Request session disconnection from API
+        // Check if this session belongs to the vendor
+        $stored_client_id = get_user_meta($user_id, 'wpwa_session_client_id', true);
+        if ($stored_client_id !== $client_id) {
+            $this->logger->error('Failed to disconnect session - ownership mismatch', array(
+                'vendor_id' => $vendor_id,
+                'client_id' => $client_id,
+                'stored_client_id' => $stored_client_id
+            ));
+            return false;
+        }
+        
+        // Send disconnect request to API
         $response = $this->api_client->delete('/sessions/' . $client_id);
         
         if (is_wp_error($response)) {
-            $this->logger->error('API error when disconnecting vendor session', array(
+            $this->logger->error('API error disconnecting session', array(
                 'vendor_id' => $vendor_id,
                 'client_id' => $client_id,
                 'error' => $response->get_error_message()
             ));
-            return false;
+            // Even if API call fails, we'll clean up local data
         }
         
-        // Clear user meta for this session
-        $user_id = $this->get_user_id_from_vendor($vendor_id);
-        if ($user_id && get_user_meta($user_id, 'wpwa_session_client_id', true) === $client_id) {
-            delete_user_meta($user_id, 'wpwa_session_client_id');
-            delete_user_meta($user_id, 'wpwa_session_status');
-            delete_user_meta($user_id, 'wpwa_session_name');
-            
-            // Keep history of disconnected sessions
-            $disconnected_sessions = get_user_meta($user_id, 'wpwa_disconnected_sessions', true);
-            if (!is_array($disconnected_sessions)) {
-                $disconnected_sessions = array();
-            }
-            
-            $disconnected_sessions[] = array(
-                'client_id' => $client_id,
-                'disconnected_at' => current_time('mysql')
-            );
-            
-            // Keep only last 10 disconnected sessions
-            if (count($disconnected_sessions) > 10) {
-                array_shift($disconnected_sessions);
-            }
-            
-            update_user_meta($user_id, 'wpwa_disconnected_sessions', $disconnected_sessions);
-        }
+        // Clean up user meta
+        delete_user_meta($user_id, 'wpwa_session_client_id');
+        delete_user_meta($user_id, 'wpwa_session_status');
         
-        $this->logger->info('Disconnected vendor session', array(
+        $this->logger->info('Disconnected WhatsApp session', array(
             'vendor_id' => $vendor_id,
             'client_id' => $client_id
         ));
@@ -200,31 +207,142 @@ class WPWA_Vendor_Session_Manager {
     }
     
     /**
-     * Associate session to vendor in the API
+     * Get QR code for a session
      *
-     * @param string $client_id Session client ID
-     * @param int    $vendor_id Vendor ID
-     * @return boolean Success status
+     * @param string $client_id Client ID
+     * @return array|WP_Error QR data or error
+     */
+    public function get_session_qr_code($client_id) {
+        return $this->api_client->get('/sessions/' . $client_id . '/qr');
+    }
+    
+    /**
+     * Check status of a WhatsApp session
+     *
+     * @param string $client_id Client ID
+     * @return array|WP_Error Status data or error
+     */
+    public function check_session_status($client_id) {
+        return $this->api_client->get('/sessions/' . $client_id . '/status');
+    }
+    
+    /**
+     * Update metadata for a session
+     *
+     * @param string $client_id Client ID
+     * @param array $metadata Metadata to update
+     * @return array|WP_Error Response or error
+     */
+    public function update_session_metadata($client_id, $metadata) {
+        return $this->api_client->put('/sessions/' . $client_id . '/metadata', $metadata);
+    }
+    
+    /**
+     * Get vendor data
+     *
+     * @param int $vendor_id Vendor ID
+     * @return array|false Vendor data or false
+     */
+    private function get_vendor_data($vendor_id) {
+        if (!$vendor_id) {
+            return false;
+        }
+        
+        $user_id = $this->get_user_id_from_vendor($vendor_id);
+        
+        if (!$user_id) {
+            return false;
+        }
+        
+        $store_name = '';
+        $store_url = '';
+        
+        // WCFM
+        if (function_exists('wcfm_get_vendor_store_name')) {
+            $store_name = wcfm_get_vendor_store_name($vendor_id);
+            $store_url = wcfm_get_vendor_store_url($vendor_id);
+        } 
+        // Dokan
+        elseif (function_exists('dokan_get_store_info')) {
+            $store_info = dokan_get_store_info($user_id);
+            $store_name = isset($store_info['store_name']) ? $store_info['store_name'] : '';
+            $store_url = function_exists('dokan_get_store_url') ? dokan_get_store_url($user_id) : '';
+        } 
+        // WC Vendors
+        elseif (function_exists('get_user_meta')) {
+            $store_name = get_user_meta($user_id, 'pv_shop_name', true);
+            $store_url = class_exists('WCV_Vendors') ? WCV_Vendors::get_vendor_shop_page($user_id) : '';
+        }
+        
+        // Default to admin
+        if (!$store_name && user_can($user_id, 'manage_woocommerce')) {
+            $store_name = get_option('blogname');
+            $store_url = get_site_url();
+        }
+        
+        return array(
+            'vendor_id' => $vendor_id,
+            'user_id' => $user_id,
+            'store_name' => $store_name,
+            'store_url' => $store_url,
+        );
+    }
+    
+    /**
+     * Get user ID from vendor ID
+     *
+     * @param int $vendor_id Vendor ID
+     * @return int|false User ID or false
+     */
+    private function get_user_id_from_vendor($vendor_id) {
+        // For most marketplace plugins, the vendor ID is the user ID
+        if (is_numeric($vendor_id)) {
+            $user_id = (int) $vendor_id;
+            
+            // Check if user exists
+            if (get_user_by('id', $user_id)) {
+                return $user_id;
+            }
+        }
+        
+        // WCFM might have a different mapping
+        if (function_exists('wcfm_get_vendor_id_by_user')) {
+            // Try to find a user that maps to this vendor ID
+            global $wpdb;
+            
+            $users = get_users(array('role__in' => array(
+                'administrator', 'shop_manager', 'wcfm_vendor', 'seller', 
+                'vendor', 'dc_vendor', 'wc_product_vendors_admin_vendor'
+            )));
+            
+            foreach ($users as $user) {
+                $user_vendor_id = wcfm_get_vendor_id_by_user($user->ID);
+                if ($user_vendor_id == $vendor_id) {
+                    return $user->ID;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Associate a session with a vendor
+     *
+     * @param string $client_id Client ID
+     * @param int $vendor_id Vendor ID
+     * @return bool Success status
      */
     private function associate_session_to_vendor($client_id, $vendor_id) {
-        if (!$client_id || !$vendor_id) {
-            return false;
-        }
-        
-        // Get vendor data
-        $vendor_data = $this->get_vendor_data($vendor_id);
-        if (!$vendor_data) {
-            return false;
-        }
-        
-        // Associate session with vendor in API
-        $response = $this->api_client->put('/sessions/' . $client_id . '/vendor', array(
+        $metadata = array(
             'vendor_id' => $vendor_id,
-            'vendor_data' => $vendor_data
-        ));
+            'site_url' => get_site_url()
+        );
+        
+        $response = $this->update_session_metadata($client_id, $metadata);
         
         if (is_wp_error($response)) {
-            $this->logger->error('API error when associating session to vendor', array(
+            $this->logger->error('Failed to associate session with vendor', array(
                 'vendor_id' => $vendor_id,
                 'client_id' => $client_id,
                 'error' => $response->get_error_message()
@@ -233,149 +351,5 @@ class WPWA_Vendor_Session_Manager {
         }
         
         return true;
-    }
-    
-    /**
-     * Get vendor data from vendor ID
-     *
-     * @param int $vendor_id Vendor ID
-     * @return array|false Vendor data or false if not found
-     */
-    private function get_vendor_data($vendor_id) {
-        $user_id = $this->get_user_id_from_vendor($vendor_id);
-        
-        if (!$user_id) {
-            return false;
-        }
-        
-        $user = get_userdata($user_id);
-        if (!$user) {
-            return false;
-        }
-        
-        $store_name = '';
-        $store_url = '';
-        
-        // Get vendor store data based on marketplace plugin
-        if (function_exists('wcfm_get_vendor_store_name')) {
-            $store_name = wcfm_get_vendor_store_name($user_id);
-            $store_url = wcfm_get_vendor_store_url($user_id);
-        } elseif (function_exists('dokan_get_store_info')) {
-            $store_info = dokan_get_store_info($user_id);
-            $store_name = isset($store_info['store_name']) ? $store_info['store_name'] : '';
-            $store_url = dokan_get_store_url($user_id);
-        } elseif (class_exists('WCV_Vendors') && function_exists('WCV_Vendors::get_vendor_shop_page')) {
-            $store_name = get_user_meta($user_id, 'pv_shop_name', true);
-            $store_url = WCV_Vendors::get_vendor_shop_page($user_id);
-        }
-        
-        return array(
-            'id' => $vendor_id,
-            'user_id' => $user_id,
-            'store_name' => $store_name,
-            'store_url' => $store_url,
-            'email' => $user->user_email,
-            'phone' => get_user_meta($user_id, 'billing_phone', true)
-        );
-    }
-    
-    /**
-     * Get user ID from vendor ID
-     *
-     * @param int $vendor_id Vendor ID
-     * @return int|false User ID or false if not found
-     */
-    private function get_user_id_from_vendor($vendor_id) {
-        // WCFM
-        if (function_exists('wcfm_get_vendor_id_by_vendor')) {
-            return wcfm_get_vendor_id_by_vendor($vendor_id);
-        }
-        
-        // Dokan (vendor ID is typically user ID)
-        if (function_exists('dokan_is_user_seller')) {
-            if (dokan_is_user_seller($vendor_id)) {
-                return $vendor_id;
-            }
-        }
-        
-        // WC Vendors (vendor ID is typically user ID)
-        if (class_exists('WCV_Vendors') && WCV_Vendors::is_vendor($vendor_id)) {
-            return $vendor_id;
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Get QR code for a session
-     *
-     * @param string $client_id Client ID
-     * @return array|WP_Error QR code data or error
-     */
-    public function get_session_qr_code($client_id) {
-        if (!$client_id) {
-            return new WP_Error('invalid_client_id', __('Invalid client ID', 'wp-whatsapp-api'));
-        }
-        
-        $response = $this->api_client->get('/sessions/' . $client_id . '/qr');
-        
-        if (is_wp_error($response)) {
-            $this->logger->error('Failed to get QR code for session', array(
-                'client_id' => $client_id,
-                'error' => $response->get_error_message()
-            ));
-            return $response;
-        }
-        
-        return $response;
-    }
-    
-    /**
-     * Check session status
-     *
-     * @param string $client_id Client ID
-     * @return array|WP_Error Session status or error
-     */
-    public function check_session_status($client_id) {
-        if (!$client_id) {
-            return new WP_Error('invalid_client_id', __('Invalid client ID', 'wp-whatsapp-api'));
-        }
-        
-        $response = $this->api_client->get('/sessions/' . $client_id . '/status');
-        
-        if (is_wp_error($response)) {
-            $this->logger->error('Failed to check session status', array(
-                'client_id' => $client_id,
-                'error' => $response->get_error_message()
-            ));
-            return $response;
-        }
-        
-        return $response;
-    }
-    
-    /**
-     * Update session metadata
-     *
-     * @param string $client_id Client ID
-     * @param array  $metadata  Metadata to update
-     * @return array|WP_Error Response or error
-     */
-    public function update_session_metadata($client_id, $metadata) {
-        if (!$client_id || !is_array($metadata)) {
-            return new WP_Error('invalid_parameters', __('Invalid parameters', 'wp-whatsapp-api'));
-        }
-        
-        $response = $this->api_client->put('/sessions/' . $client_id . '/metadata', $metadata);
-        
-        if (is_wp_error($response)) {
-            $this->logger->error('Failed to update session metadata', array(
-                'client_id' => $client_id,
-                'error' => $response->get_error_message()
-            ));
-            return $response;
-        }
-        
-        return $response;
     }
 }
