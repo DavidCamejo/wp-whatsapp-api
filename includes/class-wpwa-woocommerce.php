@@ -47,7 +47,13 @@ class WPWA_WooCommerce {
         // Initialize WooCommerce hooks
         $this->init_hooks();
         
-        $this->logger->debug('WooCommerce integration initialized');
+        // Only log if logger is available
+        if ($this->logger) {
+            $this->logger->debug('WooCommerce integration initialized');
+        } else {
+            // Fallback to WordPress error log if logger is not available
+            error_log('WPWA: WooCommerce integration initialized without logger');
+        }
     }
     
     /**
@@ -89,11 +95,13 @@ class WPWA_WooCommerce {
      * @param WC_Order $order Order object
      */
     public function handle_order_status_change($order_id, $from_status, $to_status, $order) {
-        $this->logger->debug('Order status changed', array(
-            'order_id' => $order_id,
-            'from' => $from_status,
-            'to' => $to_status
-        ));
+        if ($this->logger) {
+            $this->logger->debug('Order status changed', array(
+                'order_id' => $order_id,
+                'from' => $from_status,
+                'to' => $to_status
+            ));
+        }
         
         // Send notifications based on status change
         $this->maybe_send_order_notification($order, $to_status);
@@ -107,9 +115,11 @@ class WPWA_WooCommerce {
      * @param WC_Order $order Order object
      */
     public function handle_new_order($order_id, $posted_data, $order) {
-        $this->logger->debug('New order created', array(
-            'order_id' => $order_id
-        ));
+        if ($this->logger) {
+            $this->logger->debug('New order created', array(
+                'order_id' => $order_id
+            ));
+        }
         
         // Check if customer wants WhatsApp notifications
         $send_whatsapp = isset($_POST['wpwa_send_notifications']) ? 
@@ -131,9 +141,11 @@ class WPWA_WooCommerce {
      * @param WC_Product $product Product object
      */
     public function handle_product_create($product_id, $product) {
-        $this->logger->debug('Product created', array(
-            'product_id' => $product_id
-        ));
+        if ($this->logger) {
+            $this->logger->debug('Product created', array(
+                'product_id' => $product_id
+            ));
+        }
         
         // Schedule product sync with WhatsApp catalog if enabled
         if (get_option('wpwa_sync_products', 'no') === 'yes') {
@@ -148,9 +160,11 @@ class WPWA_WooCommerce {
      * @param WC_Product $product Product object (optional)
      */
     public function handle_product_update($product_id, $product = null) {
-        $this->logger->debug('Product updated', array(
-            'product_id' => $product_id
-        ));
+        if ($this->logger) {
+            $this->logger->debug('Product updated', array(
+                'product_id' => $product_id
+            ));
+        }
         
         // Schedule product sync with WhatsApp catalog if enabled
         if (get_option('wpwa_sync_products', 'no') === 'yes') {
@@ -193,7 +207,9 @@ class WPWA_WooCommerce {
         
         $session_id = get_option('wpwa_default_session_id', '');
         if (empty($session_id)) {
-            $this->logger->error('Cannot send order notification: No default session ID set');
+            if ($this->logger) {
+                $this->logger->error('Cannot send order notification: No default session ID set');
+            }
             return;
         }
         
@@ -225,7 +241,9 @@ class WPWA_WooCommerce {
     private function send_order_confirmation($order) {
         $session_id = get_option('wpwa_default_session_id', '');
         if (empty($session_id)) {
-            $this->logger->error('Cannot send order confirmation: No default session ID set');
+            if ($this->logger) {
+                $this->logger->error('Cannot send order confirmation: No default session ID set');
+            }
             return false;
         }
         
@@ -475,4 +493,9 @@ class WPWA_WooCommerce {
 }
 
 // Initialize the class
-new WPWA_WooCommerce();
+global $wp_whatsapp_api;
+if ($wp_whatsapp_api) {
+    $wp_whatsapp_api->woocommerce_integration = new WPWA_WooCommerce();
+} else {
+    new WPWA_WooCommerce();
+}
