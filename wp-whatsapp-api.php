@@ -3,7 +3,7 @@
  * Plugin Name: WhatsApp Integration for WooCommerce
  * Plugin URI: https://example.com/wp-whatsapp-integration
  * Description: Integrate WhatsApp API with WooCommerce for vendors and store management
- * Version: 1.2.1
+ * Version: 1.2.3
  * Author: Your Company
  * Author URI: https://example.com
  * Text Domain: wp-whatsapp-api
@@ -17,7 +17,7 @@
 defined('ABSPATH') || exit;
 
 // Define plugin constants
-define('WPWA_VERSION', '1.2.1');
+define('WPWA_VERSION', '1.2.3');
 define('WPWA_PATH', plugin_dir_path(__FILE__));
 define('WPWA_URL', plugin_dir_url(__FILE__));
 define('WPWA_ASSETS_URL', WPWA_URL . 'assets/');
@@ -129,7 +129,12 @@ class WP_WhatsApp_API {
         $this->logger = new WPWA_Logger();
         $this->auth_manager = new WPWA_Auth_Manager();
         $this->api_client = new WPWA_API_Client($this->auth_manager);
-        $this->message_manager = new WPWA_Message_Manager($this->api_client, $this->logger);
+        
+        // Load template manager before message manager
+        require_once WPWA_PATH . 'includes/class-wpwa-template-manager.php';
+        $template_manager = new WPWA_Template_Manager();
+        
+        $this->message_manager = new WPWA_Message_Manager($this->api_client, $template_manager, $this->logger);
         $this->vendor_session_manager = new WPWA_Vendor_Session_Manager($this->api_client, $this->logger);
         $this->product_sync_manager = new WPWA_Product_Sync_Manager($this->api_client, $this->logger);
     }
@@ -292,7 +297,27 @@ class WP_WhatsApp_API {
      */
     public function init_woocommerce_integration() {
         // Add WooCommerce specific features
-        require_once WPWA_PATH . 'includes/class-wpwa-woocommerce.php';
+        $woocommerce_file = WPWA_PATH . 'includes/class-wpwa-woocommerce.php';
+        
+        if (file_exists($woocommerce_file)) {
+            require_once $woocommerce_file;
+        } else {
+            // Log the missing file and continue without WooCommerce integration
+            if ($this->logger) {
+                $this->logger->error('WooCommerce integration file not found', array(
+                    'file' => $woocommerce_file
+                ));
+            }
+            
+            // Add admin notice
+            add_action('admin_notices', function() {
+                echo '<div class="notice notice-warning"><p>';
+                echo sprintf(
+                    __('WhatsApp API: WooCommerce integration is disabled. Please contact support if you need this feature.', 'wp-whatsapp-api')
+                );
+                echo '</p></div>';
+            });
+        }
     }
 
     /**
