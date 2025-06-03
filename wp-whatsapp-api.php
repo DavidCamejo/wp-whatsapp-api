@@ -3,7 +3,7 @@
  * Plugin Name: WhatsApp Integration for WooCommerce
  * Plugin URI: https://example.com/wp-whatsapp-integration
  * Description: Integrate WhatsApp API with WooCommerce for vendors and store management
- * Version: 1.2.3
+ * Version: 1.2.5
  * Author: Your Company
  * Author URI: https://example.com
  * Text Domain: wp-whatsapp-api
@@ -17,7 +17,7 @@
 defined('ABSPATH') || exit;
 
 // Define plugin constants
-define('WPWA_VERSION', '1.2.3');
+define('WPWA_VERSION', '1.2.6');
 define('WPWA_PATH', plugin_dir_path(__FILE__));
 define('WPWA_URL', plugin_dir_url(__FILE__));
 define('WPWA_ASSETS_URL', WPWA_URL . 'assets/');
@@ -72,6 +72,13 @@ class WP_WhatsApp_API {
      * @var WPWA_Product_Sync_Manager
      */
     public $product_sync_manager = null;
+    
+    /**
+     * WooCommerce Integration instance
+     *
+     * @var WPWA_WooCommerce
+     */
+    public $woocommerce_integration = null;
 
     /**
      * Get singleton instance
