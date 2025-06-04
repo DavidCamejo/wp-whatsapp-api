@@ -3,7 +3,7 @@
  * Plugin Name: WhatsApp Integration for WooCommerce
  * Plugin URI: https://example.com/wp-whatsapp-integration
  * Description: Integrate WhatsApp API with WooCommerce for vendors and store management
- * Version: 1.2.7
+ * Version: 1.2.9
  * Author: Your Company
  * Author URI: https://example.com
  * Text Domain: wp-whatsapp-api
@@ -17,7 +17,7 @@
 defined('ABSPATH') || exit;
 
 // Define plugin constants
-define('WPWA_VERSION', '1.2.7');
+define('WPWA_VERSION', '1.2.9');
 define('WPWA_PATH', plugin_dir_path(__FILE__));
 define('WPWA_URL', plugin_dir_url(__FILE__));
 define('WPWA_ASSETS_URL', WPWA_URL . 'assets/');
@@ -176,9 +176,16 @@ class WP_WhatsApp_API {
         // Register cron schedules
         add_filter('cron_schedules', array($this, 'register_cron_schedules'));
         
-        // Make plugin available globally
-        global $wp_whatsapp_api;
+        // Make plugin and logger available globally
+        global $wp_whatsapp_api, $wpwa_logger;
         $wp_whatsapp_api = $this;
+        $wpwa_logger = $this->logger;
+        
+        // Additional debug information if debug mode is enabled
+        if (defined('WPWA_DEBUG') && WPWA_DEBUG) {
+            error_log('WPWA: Plugin initialized with version ' . WPWA_VERSION);
+            error_log('WPWA: Global logger instance ' . ($wpwa_logger ? 'available' : 'not available'));
+        }
     }
 
     /**
@@ -319,6 +326,8 @@ class WP_WhatsApp_API {
         
         if (file_exists($woocommerce_file)) {
             require_once $woocommerce_file;
+            // Only initialize WooCommerce integration if logger is available
+            $this->woocommerce_integration = new WPWA_WooCommerce();
         } else {
             // Log the missing file and continue without WooCommerce integration
             if ($this->logger) {

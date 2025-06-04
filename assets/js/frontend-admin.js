@@ -77,6 +77,12 @@
             console.error('Tabs container not found in DOM');
             var bodyContent = $('body').html().substring(0, 500) + '... (truncated)';
             console.log('First 500 chars of body content:', bodyContent);
+            
+            // Try creating the tabs structure if it's not properly initialized
+            if ($('[id^="wpwa-tab-"]').length > 0) {
+                console.log('Found tab content elements, but no tabs container. Attempting to fix DOM structure...');
+                tryFixingTabsStructure();
+            }
             return;
         }
         
@@ -206,6 +212,75 @@
         });
         
         console.log('Simple tab system implemented');
+    }
+    
+    /**
+     * Attempt to fix the tab structure if it's not properly initialized
+     */
+    function tryFixingTabsStructure() {
+        console.log('Attempting to fix tabs structure...');
+        
+        // Check if we have tab elements but no proper container
+        var tabContents = $('[id^="wpwa-tab-"]');
+        
+        if (tabContents.length > 0) {
+            console.log('Found ' + tabContents.length + ' tab content elements');
+            
+            // Create tabs container if it doesn't exist
+            if ($('#wpwa-admin-tabs').length === 0) {
+                console.log('Creating tabs container');
+                
+                // Find the parent container (usually .wpwa-admin-wrapper)
+                var parentContainer = tabContents.first().parent();
+                
+                // Create the tabs container
+                var tabsContainer = $('<div id="wpwa-admin-tabs" class="ui-tabs ui-widget ui-widget-content ui-corner-all"></div>');
+                
+                // Create the tab navigation
+                var tabNav = $('<ul class="wpwa-tab-nav ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all"></ul>');
+                
+                // Add tab items for each tab content div
+                var tabNames = {
+                    'settings': 'Settings',
+                    'logs': 'Logs',
+                    'sessions': 'Sessions'
+                };
+                
+                tabContents.each(function(index) {
+                    var tabId = $(this).attr('id');
+                    var tabKey = tabId.replace('wpwa-tab-', '');
+                    var tabTitle = tabNames[tabKey] || tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
+                    
+                    // Create tab navigation item
+                    var tabItem = $('<li class="ui-state-default ui-corner-top' + (index === 0 ? ' ui-tabs-active ui-state-active' : '') + '"><a href="#' + tabId + '">' + tabTitle + '</a></li>');
+                    tabNav.append(tabItem);
+                    
+                    // Add proper classes to content
+                    $(this).addClass('ui-tabs-panel ui-widget-content ui-corner-bottom');
+                });
+                
+                // Insert the tabs navigation into the container
+                tabsContainer.append(tabNav);
+                
+                // Move the container to the right place
+                parentContainer.prepend(tabsContainer);
+                
+                // Move all tab content divs into the tabs container
+                tabContents.each(function() {
+                    $(this).detach().appendTo(tabsContainer);
+                });
+                
+                // Try to initialize jQuery UI tabs
+                try {
+                    tabsContainer.tabs();
+                    console.log('Successfully initialized jQuery UI tabs with repaired structure');
+                } catch(e) {
+                    console.error('Failed to initialize jQuery UI tabs with repaired structure:', e);
+                    // Fall back to simple tabs implementation
+                    implementSimpleTabs();
+                }
+            }
+        }
     }
     
     function loadInitialData() {
@@ -564,6 +639,54 @@
             $('body').append('<div id="wpwa-notification" class="wpwa-notification" style="display:none;"></div>');
         }
     }
+    
+    /**
+     * Make sure jQuery UI is properly loaded
+     * This function will be called periodically to ensure jQuery UI is available
+     */
+    function ensureJQueryUI() {
+        // Check if jQuery UI tabs is available
+        if (typeof $.fn.tabs !== 'function') {
+            console.log('jQuery UI tabs not found, trying to load dynamically');
+            
+            // Try to load jQuery UI dynamically
+            var script = document.createElement('script');
+            script.src = 'https://code.jquery.com/ui/1.13.2/jquery-ui.min.js';
+            script.onload = function() {
+                console.log('jQuery UI loaded dynamically by ensureJQueryUI');
+                // Try initializing tabs again
+                if ($('#wpwa-admin-tabs').length > 0) {
+                    console.log('Found tabs container, reinitializing');
+                    try {
+                        $('#wpwa-admin-tabs').tabs();
+                        console.log('Tabs initialized successfully after dynamic loading');
+                    } catch(e) {
+                        console.error('Error initializing tabs after dynamic loading:', e);
+                        implementSimpleTabs();
+                    }
+                }
+            };
+            document.head.appendChild(script);
+            
+            // Also add jQuery UI CSS
+            if ($('link[href*="jquery-ui"]').length === 0) {
+                var cssLink = document.createElement('link');
+                cssLink.rel = 'stylesheet';
+                cssLink.type = 'text/css';
+                cssLink.href = 'https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css';
+                document.head.appendChild(cssLink);
+            }
+        }
+    }
+    
+    // Call ensureJQueryUI on load and periodically
+    $(window).on('load', function() {
+        // Check immediately on load
+        ensureJQueryUI();
+        
+        // And check again after 1 second
+        setTimeout(ensureJQueryUI, 1000);
+    });
 
     /**
      * Show notification message

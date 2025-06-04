@@ -2,6 +2,42 @@
 
 All notable changes to the WhatsApp API for WooCommerce plugin will be documented in this file.
 
+## [1.2.9] - 2025-06-03
+
+### Fixed
+- Enhanced frontend admin panel rendering with additional jQuery UI dependencies
+- Improved stability of jQuery UI tabs initialization with multiple fallback mechanisms
+- Fixed rendering issues with shortcodes in the admin panel and frontend
+- Added comprehensive jQuery UI dependency loading to ensure compatibility
+- Improved error handling and debugging for UI components
+- Added tab structure repair function that dynamically rebuilds UI component containers
+- Implemented jQuery UI dynamic loading with periodic availability checks
+- Fixed global logger instance availability across the system
+- Added automatic detection and repair of improperly initialized tab containers
+- Enhanced jQuery UI loading with preloading for better availability
+
+## [1.2.8] - 2025-06-03
+
+### Fixed
+- Fixed issue with frontend admin panel UI initialization
+- Added missing AJAX handler methods for frontend rendering
+- Improved CSS styling for better compatibility across themes
+- Enhanced nonce verification for frontend AJAX requests
+
+## [1.2.7] - 2025-06-03
+
+### Fixed
+- Fixed WooCommerce integration logger usage
+- Added null checks for logger throughout the application
+- Improved error handling in the frontend admin panel shortcode
+
+## [1.2.6] - 2025-06-03
+
+### Fixed
+- Fixed AJAX handler issues affecting admin panel functionality
+- Added improved nonce verification for AJAX requests
+- Enhanced security by fixing potential nonce verification bypass
+
 ## [1.2.5] - 2025-06-03
 
 ### Fixed

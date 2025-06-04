@@ -296,7 +296,7 @@ class WPWA_AJAX_Handler_Frontend {
             return;
         }
         
-        error_log('WPWA: Nonce verification completed successfully')
+        error_log('WPWA: Nonce verification completed successfully');
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => __('You do not have permission to perform this action', 'wp-whatsapp-api')));

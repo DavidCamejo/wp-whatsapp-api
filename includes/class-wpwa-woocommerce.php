@@ -492,10 +492,7 @@ class WPWA_WooCommerce {
     }
 }
 
-// Initialize the class
-global $wp_whatsapp_api;
-if ($wp_whatsapp_api) {
-    $wp_whatsapp_api->woocommerce_integration = new WPWA_WooCommerce();
-} else {
-    new WPWA_WooCommerce();
-}
+// Do not auto-initialize this class
+// The main plugin will initialize it when needed after logger is available
+// global $wp_whatsapp_api;
+// $wp_whatsapp_api->woocommerce_integration = new WPWA_WooCommerce();

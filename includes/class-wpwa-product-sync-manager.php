@@ -224,7 +224,7 @@ class WPWA_Product_Sync_Manager {
      * @param bool $ids_only Return only product IDs
      * @return array Products or product IDs
      */
-    private function get_vendor_products($vendor_id, $ids_only = false) {
+    public function get_vendor_products($vendor_id, $ids_only = false) {
         // Query parameters
         $args = array(
             'post_type' => 'product',

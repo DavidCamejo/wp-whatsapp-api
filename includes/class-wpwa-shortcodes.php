@@ -103,7 +103,7 @@ class WPWA_Shortcodes {
         error_log('WPWA Frontend Admin - Tabs available: ' . (wp_script_is('jquery-ui-tabs', 'registered') ? 'yes' : 'no'));
         error_log('WPWA Frontend Admin - jQuery UI core loaded: ' . (wp_script_is('jquery-ui-core', 'enqueued') ? 'yes' : 'no'));
         
-        // Load all jQuery UI dependencies in the correct order
+        // Load all jQuery UI dependencies in the correct order with stronger dependency management
         wp_enqueue_script('jquery');
         wp_enqueue_script('jquery-ui-core');
         wp_enqueue_script('jquery-ui-widget'); // Required for tabs and other UI components
@@ -111,13 +111,20 @@ class WPWA_Shortcodes {
         wp_enqueue_script('jquery-ui-tabs');
         wp_enqueue_script('jquery-ui-dialog');
         
-        // Enqueue both jQuery UI themes to ensure compatibilty
+        // Make sure we have the right jQuery UI version for tabs
+        wp_deregister_script('jquery-ui-tabs');
+        wp_register_script('jquery-ui-tabs', 'https://code.jquery.com/ui/1.13.2/jquery-ui.min.js', array('jquery', 'jquery-ui-core', 'jquery-ui-widget'), '1.13.2', true);
+        wp_enqueue_script('jquery-ui-tabs');
+        
+        // Enqueue multiple jQuery UI themes to ensure compatibilty
         wp_enqueue_style('jquery-ui-base');
         wp_enqueue_style('jquery-ui-smoothness');
-        
-        // Also load directly from CDN as a fallback
         wp_enqueue_style('jquery-ui-cdn', 'https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css', array(), '1.13.2');
-        echo '<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>';
+        
+        // Pre-load jQuery UI from CDN for immediate availability with async loading
+        echo '<link rel="preload" href="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" as="script">';
+        echo '<link rel="preload" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" as="style">';
+        echo '<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" crossorigin="anonymous"></script>';
         // Parse attributes
         $atts = shortcode_atts(array(
             'title' => __('WhatsApp API Settings', 'wp-whatsapp-api'),
