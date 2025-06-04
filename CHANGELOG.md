@@ -2,6 +2,24 @@
 
 All notable changes to the WhatsApp API for WooCommerce plugin will be documented in this file.
 
+## [1.2.5] - 2025-06-03
+
+### Fixed
+- Created missing admin settings page file (settings-page.php)
+- Fixed PHP 8.2 dynamic property deprecation warnings in WooCommerce integration
+- Properly declared woocommerce_integration property in main plugin class
+- Updated WooCommerce integration initialization to use the declared property
+- Fixed fatal error caused by uninitialized logger in WooCommerce integration class
+- Added proper null checks for logger usage throughout the WooCommerce integration
+
+## [1.2.4] - 2025-06-03
+
+### Fixed
+- Fixed fatal error caused by missing admin AJAX handler file
+- Added proper implementation of class-wpwa-ajax-handler-admin.php
+- Improved AJAX handling for the admin dashboard
+- Added comprehensive AJAX endpoint support for settings, sessions, logs, and product sync
+
 ## [1.2.3] - 2025-06-03
 
 ### Fixed

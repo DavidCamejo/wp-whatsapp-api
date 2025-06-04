@@ -3,7 +3,7 @@
  * Plugin Name: WhatsApp Integration for WooCommerce
  * Plugin URI: https://example.com/wp-whatsapp-integration
  * Description: Integrate WhatsApp API with WooCommerce for vendors and store management
- * Version: 1.2.5
+ * Version: 1.2.7
  * Author: Your Company
  * Author URI: https://example.com
  * Text Domain: wp-whatsapp-api
@@ -17,7 +17,7 @@
 defined('ABSPATH') || exit;
 
 // Define plugin constants
-define('WPWA_VERSION', '1.2.6');
+define('WPWA_VERSION', '1.2.7');
 define('WPWA_PATH', plugin_dir_path(__FILE__));
 define('WPWA_URL', plugin_dir_url(__FILE__));
 define('WPWA_ASSETS_URL', WPWA_URL . 'assets/');
@@ -262,16 +262,24 @@ class WP_WhatsApp_API {
         // Admin styles
         wp_register_style(
             'wpwa-admin',
-            WPWA_ASSETS_URL . 'css/admin.css',
+            WPWA_ASSETS_URL . 'css/admin-style.css',
             array(),
             WPWA_VERSION
+        );
+        
+        // Register jQuery UI
+        wp_register_style(
+            'jquery-ui',
+            'https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css',
+            array(),
+            '1.13.2'
         );
         
         // Admin scripts
         wp_register_script(
             'wpwa-admin',
-            WPWA_ASSETS_URL . 'js/admin.js',
-            array('jquery'),
+            WPWA_ASSETS_URL . 'js/admin-script.js',
+            array('jquery', 'jquery-ui-tabs', 'jquery-ui-dialog'),
             WPWA_VERSION,
             true
         );
@@ -279,13 +287,16 @@ class WP_WhatsApp_API {
         // Localize admin script
         wp_localize_script('wpwa-admin', 'wpwaAdminVars', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('wpwa_admin_nonce')
+            'nonce' => wp_create_nonce('wpwa_nonce')
         ));
         
         // Only enqueue on plugin pages
         $screen = get_current_screen();
         if ($screen && strpos($screen->id, 'wpwa') !== false) {
+            wp_enqueue_style('jquery-ui');
             wp_enqueue_style('wpwa-admin');
+            wp_enqueue_script('jquery-ui-tabs');
+            wp_enqueue_script('jquery-ui-dialog');
             wp_enqueue_script('wpwa-admin');
         }
     }

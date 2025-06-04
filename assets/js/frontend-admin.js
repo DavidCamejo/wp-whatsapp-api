@@ -8,8 +8,12 @@
 (function($) {
     'use strict';
 
+    // Console debug for script loading
+    console.log('WPWA Frontend Admin script loaded');
+
     // Initialize tabs when document is ready
     $(document).ready(function() {
+        console.log('WPWA Frontend Admin document ready');
         initTabs();
         setupFormHandlers();
         setupButtonHandlers();
@@ -21,14 +25,89 @@
      * Initialize jQuery UI tabs
      */
     function initTabs() {
-        $('#wpwa-admin-tabs').tabs({
-            activate: function(event, ui) {
-                // Load logs when logs tab is activated
-                if (ui.newPanel.attr('id') === 'wpwa-tab-logs') {
-                    loadLogs();
+        console.log('Initializing tabs, tab element exists:', $('#wpwa-admin-tabs').length > 0);
+        
+        // Wait for DOM to be fully ready
+        setTimeout(function() {
+            try {
+                // Make sure jQuery UI is loaded
+                if (typeof $.fn.tabs !== 'function') {
+                    console.error('jQuery UI Tabs not loaded!');
+                    console.log('Available jQuery methods:', Object.keys($.fn).join(', '));
+                    
+                    // Try to load jQuery UI dynamically
+                    var script = document.createElement('script');
+                    script.src = 'https://code.jquery.com/ui/1.13.2/jquery-ui.min.js';
+                    script.onload = function() {
+                        console.log('jQuery UI loaded dynamically');
+                        initTabsAfterLoad();
+                    };
+                    document.head.appendChild(script);
+                    
+                    // Also add jQuery UI CSS
+                    var cssLink = document.createElement('link');
+                    cssLink.rel = 'stylesheet';
+                    cssLink.type = 'text/css';
+                    cssLink.href = 'https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css';
+                    document.head.appendChild(cssLink);
+                    
+                    // Add a fallback in case the script doesn't load
+                    setTimeout(function() {
+                        if (typeof $.fn.tabs !== 'function') {
+                            console.log('jQuery UI still not loaded after timeout, implementing simple tab solution');
+                            implementSimpleTabs();
+                        }
+                    }, 3000);
+                    
+                    return;
                 }
+                
+                initTabsAfterLoad();
+            } catch(e) {
+                console.error('Error initializing tabs:', e);
+                // Fallback to simple tabs if there's an error
+                implementSimpleTabs();
             }
+        }, 500);
+    }
+    
+    function initTabsAfterLoad() {
+        // Check if tabs element exists
+        if ($('#wpwa-admin-tabs').length === 0) {
+            console.error('Tabs container not found in DOM');
+            var bodyContent = $('body').html().substring(0, 500) + '... (truncated)';
+            console.log('First 500 chars of body content:', bodyContent);
+            return;
+        }
+        
+        // Debug DOM structure in detail
+        console.log('Tabs DOM structure:', {
+            'tabs': $('#wpwa-admin-tabs').html(),
+            'tab-nav': $('.wpwa-tab-nav').length ? $('.wpwa-tab-nav').html() : 'Nav not found',
+            'tab-count': $('#wpwa-admin-tabs > div').length,
+            'tab-ids': Array.from($('#wpwa-admin-tabs > div')).map(el => el.id).join(', '),
+            'settings-tab': $('#wpwa-tab-settings').length ? 'exists' : 'missing',
+            'logs-tab': $('#wpwa-tab-logs').length ? 'exists' : 'missing',
+            'sessions-tab': $('#wpwa-tab-sessions').length ? 'exists' : 'missing'
         });
+        
+        try {
+            $('#wpwa-admin-tabs').tabs({
+                create: function(event, ui) {
+                    console.log('Tabs created successfully');
+                },
+                activate: function(event, ui) {
+                    console.log('Tab activated:', ui.newPanel.attr('id'));
+                    // Load logs when logs tab is activated
+                    if (ui.newPanel.attr('id') === 'wpwa-tab-logs') {
+                        loadLogs();
+                    }
+                }
+            });
+            console.log('Tabs initialization completed');
+        } catch (e) {
+            console.error('Error in tabs initialization:', e);
+        }
     }
 
     /**
@@ -78,15 +157,69 @@
     }
 
     /**
-     * Load initial data when page loads
+     * Implement a simple tab system if jQuery UI tabs are not available
      */
+    function implementSimpleTabs() {
+        console.log('Implementing simple tab system');
+        if ($('#wpwa-admin-tabs').length === 0) {
+            console.error('Cannot implement simple tabs: container not found');
+            return;
+        }
+        
+        // Hide all tab content initially
+        $('#wpwa-admin-tabs > div[id^="wpwa-tab-"]').hide();
+        
+        // Show the first tab
+        $('#wpwa-admin-tabs > div[id^="wpwa-tab-"]:first').show();
+        
+        // Add active class to first nav item
+        $('.wpwa-tab-nav li:first').addClass('wpwa-tab-active');
+        
+        // Handle tab clicks
+        $('.wpwa-tab-nav li a').on('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all tabs
+            $('.wpwa-tab-nav li').removeClass('wpwa-tab-active');
+            
+            // Add active class to current tab
+            $(this).parent().addClass('wpwa-tab-active');
+            
+            // Hide all tab content
+            $('#wpwa-admin-tabs > div[id^="wpwa-tab-"]').hide();
+            
+            // Show selected tab content
+            var tabId = $(this).attr('href');
+            $(tabId).show();
+            
+            // If logs tab is activated, load logs
+            if (tabId === '#wpwa-tab-logs') {
+                loadLogs();
+            }
+            // If sessions tab is activated, load sessions
+            else if (tabId === '#wpwa-tab-sessions') {
+                loadSessions();
+            }
+            
+            console.log('Simple tabs: Activated tab', tabId);
+            return false;
+        });
+        
+        console.log('Simple tab system implemented');
+    }
+    
     function loadInitialData() {
+        console.log('Loading initial data, available frontend data:', wpwaFrontend);
+        
         // Load actual JWT secret (replacing placeholder)
         loadJwtSecret();
         
         // Load logs if logs tab is active
-        if ($('#wpwa-tab-logs').is(':visible')) {
+        if ($('#wpwa-tab-logs').length && $('#wpwa-tab-logs').is(':visible')) {
+            console.log('Logs tab is visible, loading logs');
             loadLogs();
+        } else {
+            console.log('Logs tab is not visible or does not exist');
         }
 
         // Load sessions if sessions tab is active
@@ -306,13 +439,40 @@
         var logsContainer = $('#wpwa-logs-container');
         logsContainer.html('<div class="wpwa-loading">Loading logs...</div>');
         
+        // Check if container exists after setting content
+        if ($('#wpwa-logs-container').length === 0) {
+            console.error('Error: Logs container not found in DOM after setting loading message');
+        }
+        
+        // Debug info
+        console.log('Loading logs with:', {
+            'AJAX URL': wpwaFrontend.ajaxUrl,
+            'Frontend Nonce': wpwaFrontend.frontendNonce,
+            'Regular Nonce': wpwaFrontend.nonce,
+            'Both Nonces Present': !!(wpwaFrontend.frontendNonce && wpwaFrontend.nonce)
+        });
+        
+        // Prepare data with all possible nonce variations
+        var ajaxData = {
+            action: 'wpwa_admin_get_logs'
+        };
+        
+        // Add all possible nonce options to increase chances of success
+        if (wpwaFrontend.frontendNonce) {
+            ajaxData.wpwa_frontend_nonce = wpwaFrontend.frontendNonce;
+        }
+        if (wpwaFrontend.nonce) {
+            ajaxData.wpwa_nonce = wpwaFrontend.nonce;
+            // Fallback in case the handler expects this format
+            ajaxData._wpnonce = wpwaFrontend.nonce;
+        }
+        
+        console.log('AJAX request data:', ajaxData);
+        
         $.ajax({
             url: wpwaFrontend.ajaxUrl,
             type: 'POST',
-            data: {
-                action: 'wpwa_admin_get_logs',
-                wpwa_frontend_nonce: wpwaFrontend.frontendNonce
-            },
+            data: ajaxData,
             success: function(response) {
                 if (response.success) {
                     displayLogs(response.data.logs);

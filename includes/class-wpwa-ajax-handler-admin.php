@@ -35,7 +35,7 @@ class WPWA_AJAX_Handler_Admin {
      * Save plugin settings
      */
     public function save_settings() {
-        check_ajax_referer('wpwa_admin_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => __('You do not have permission to perform this action', 'wp-whatsapp-api')));
@@ -73,7 +73,7 @@ class WPWA_AJAX_Handler_Admin {
      * Test API connection
      */
     public function test_connection() {
-        check_ajax_referer('wpwa_admin_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => __('You do not have permission to perform this action', 'wp-whatsapp-api')));
@@ -102,7 +102,7 @@ class WPWA_AJAX_Handler_Admin {
      * Generate API key
      */
     public function generate_api_key() {
-        check_ajax_referer('wpwa_admin_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => __('You do not have permission to perform this action', 'wp-whatsapp-api')));
@@ -124,7 +124,7 @@ class WPWA_AJAX_Handler_Admin {
      * Generate JWT secret
      */
     public function generate_jwt_secret() {
-        check_ajax_referer('wpwa_admin_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => __('You do not have permission to perform this action', 'wp-whatsapp-api')));
@@ -149,7 +149,7 @@ class WPWA_AJAX_Handler_Admin {
      * Get vendor sessions
      */
     public function get_sessions() {
-        check_ajax_referer('wpwa_admin_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => __('You do not have permission to perform this action', 'wp-whatsapp-api')));
@@ -175,7 +175,7 @@ class WPWA_AJAX_Handler_Admin {
      * Delete vendor session
      */
     public function delete_session() {
-        check_ajax_referer('wpwa_admin_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => __('You do not have permission to perform this action', 'wp-whatsapp-api')));
@@ -210,7 +210,7 @@ class WPWA_AJAX_Handler_Admin {
      * Refresh vendor session
      */
     public function refresh_session() {
-        check_ajax_referer('wpwa_admin_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => __('You do not have permission to perform this action', 'wp-whatsapp-api')));
@@ -245,7 +245,7 @@ class WPWA_AJAX_Handler_Admin {
      * Get system logs
      */
     public function get_logs() {
-        check_ajax_referer('wpwa_admin_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => __('You do not have permission to perform this action', 'wp-whatsapp-api')));
@@ -270,7 +270,7 @@ class WPWA_AJAX_Handler_Admin {
      * Clear system logs
      */
     public function clear_logs() {
-        check_ajax_referer('wpwa_admin_nonce', 'nonce');
+        check_ajax_referer('wpwa_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => __('You do not have permission to perform this action', 'wp-whatsapp-api')));

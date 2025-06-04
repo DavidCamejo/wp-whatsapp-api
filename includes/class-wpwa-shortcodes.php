@@ -47,22 +47,23 @@ class WPWA_Shortcodes {
      * Register frontend scripts and styles
      */
     public function register_frontend_assets() {
-        // Register jQuery UI
-        wp_register_style('jquery-ui', 'https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css');
+        // Register jQuery UI - load multiple themes to ensure compatibility
+        wp_register_style('jquery-ui-base', 'https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css');
+        wp_register_style('jquery-ui-smoothness', 'https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css');
         
         // Register frontend admin styles
         wp_register_style(
             'wpwa-frontend-admin-css',
             WPWA_ASSETS_URL . 'css/frontend-admin.css',
-            array('jquery-ui'),
+            array('jquery-ui-base', 'jquery-ui-smoothness'),
             WPWA_VERSION
         );
 
-        // Register frontend admin scripts
+        // Register frontend admin scripts - ensure jQuery is loaded first
         wp_register_script(
             'wpwa-frontend-admin-js',
             WPWA_ASSETS_URL . 'js/frontend-admin.js',
-            array('jquery', 'jquery-ui-tabs', 'jquery-ui-dialog'),
+            array('jquery', 'jquery-ui-core', 'jquery-ui-tabs', 'jquery-ui-dialog'),
             WPWA_VERSION,
             true
         );
@@ -72,6 +73,8 @@ class WPWA_Shortcodes {
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('wpwa_nonce'),
             'frontendNonce' => wp_create_nonce('wpwa_frontend_nonce'),
+            // Debug info for nonce generation
+            'debug' => true,
             'texts' => array(
                 'validating' => __('Validating API credentials...', 'wp-whatsapp-api'),
                 'generateJwtSecret' => __('Generate New JWT Secret', 'wp-whatsapp-api'),
@@ -92,6 +95,29 @@ class WPWA_Shortcodes {
      * @return string
      */
     public function frontend_admin_shortcode($atts) {
+        // Debug output
+        error_log('WPWA Frontend Admin shortcode called');
+        error_log('WPWA Frontend Admin - JQuery UI version: ' . wp_scripts()->registered['jquery-ui-core']->ver);
+        error_log('WPWA Frontend Admin - WordPress version: ' . get_bloginfo('version'));
+        error_log('WPWA Frontend Admin - Plugin version: ' . WPWA_VERSION);
+        error_log('WPWA Frontend Admin - Tabs available: ' . (wp_script_is('jquery-ui-tabs', 'registered') ? 'yes' : 'no'));
+        error_log('WPWA Frontend Admin - jQuery UI core loaded: ' . (wp_script_is('jquery-ui-core', 'enqueued') ? 'yes' : 'no'));
+        
+        // Load all jQuery UI dependencies in the correct order
+        wp_enqueue_script('jquery');
+        wp_enqueue_script('jquery-ui-core');
+        wp_enqueue_script('jquery-ui-widget'); // Required for tabs and other UI components
+        wp_enqueue_script('jquery-ui-mouse');
+        wp_enqueue_script('jquery-ui-tabs');
+        wp_enqueue_script('jquery-ui-dialog');
+        
+        // Enqueue both jQuery UI themes to ensure compatibilty
+        wp_enqueue_style('jquery-ui-base');
+        wp_enqueue_style('jquery-ui-smoothness');
+        
+        // Also load directly from CDN as a fallback
+        wp_enqueue_style('jquery-ui-cdn', 'https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css', array(), '1.13.2');
+        echo '<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>';
         // Parse attributes
         $atts = shortcode_atts(array(
             'title' => __('WhatsApp API Settings', 'wp-whatsapp-api'),

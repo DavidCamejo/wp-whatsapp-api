@@ -7,18 +7,18 @@ jQuery(document).ready(function($) {
     $('#wpwa_generate_jwt_secret').on('click', function(e) {
         e.preventDefault();
         
-        if (!confirm(wpwa.i18n.confirm_generate_jwt)) {
+        if (!confirm('Are you sure you want to generate a new JWT Secret? This will invalidate existing tokens.')) {
             return;
         }
         
         $(this).prop('disabled', true).text('Generating...');
         
         $.ajax({
-            url: wpwa.ajax_url,
+            url: wpwaAdminVars.ajaxUrl,
             type: 'POST',
             data: {
                 action: 'wpwa_generate_jwt_secret',
-                nonce: wpwa.nonce
+                nonce: wpwaAdminVars.nonce
             },
             success: function(response) {
                 if (response.success) {
@@ -52,11 +52,11 @@ jQuery(document).ready(function($) {
         $(this).prop('disabled', true).text('Validating...');
         
         $.ajax({
-            url: wpwa.ajax_url,
+            url: wpwaAdminVars.ajaxUrl,
             type: 'POST',
             data: {
                 action: 'wpwa_validate_api_credentials',
-                nonce: wpwa.nonce,
+                nonce: wpwaAdminVars.nonce,
                 api_url: apiUrl,
                 api_key: apiKey
             },
@@ -87,11 +87,11 @@ jQuery(document).ready(function($) {
         $(this).prop('disabled', true);
         
         $.ajax({
-            url: wpwa.ajax_url,
+            url: wpwaAdminVars.ajaxUrl,
             type: 'POST',
             data: {
                 action: 'wpwa_generate_api_key',
-                nonce: wpwa.nonce
+                nonce: wpwaAdminVars.nonce
             },
             success: function(response) {
                 if (response.success) {
@@ -117,11 +117,11 @@ jQuery(document).ready(function($) {
         $(this).prop('disabled', true).text('Loading...');
         
         $.ajax({
-            url: wpwa.ajax_url,
+            url: wpwaAdminVars.ajaxUrl,
             type: 'POST',
             data: {
                 action: 'wpwa_admin_get_logs',
-                nonce: wpwa.nonce
+                nonce: wpwaAdminVars.nonce
             },
             success: function(response) {
                 if (response.success) {
@@ -168,11 +168,11 @@ jQuery(document).ready(function($) {
                     $('#wpwa-clear-logs').on('click', function() {
                         if (confirm('Are you sure you want to clear all logs?')) {
                             $.ajax({
-                                url: wpwa.ajax_url,
+                                url: wpwaAdminVars.ajaxUrl,
                                 type: 'POST',
                                 data: {
                                     action: 'wpwa_admin_clear_logs',
-                                    nonce: wpwa.nonce
+                                    nonce: wpwaAdminVars.nonce
                                 },
                                 success: function(response) {
                                     if (response.success) {
